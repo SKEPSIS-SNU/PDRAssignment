@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import Admin from "../database/models/admin.model";
-import Record from "../database/models/record.model";
+import Record from "../database/models/assignment.model";
 import Track from "../database/models/track.model";
 import User from "../database/models/user.model";
 import { connectToDatabase } from "../database/mongoose";
