@@ -6,7 +6,7 @@ import Admin from "../database/models/admin.model";
 import { userInfo } from "./userInfo.action";
 import Track from "../database/models/track.model";
 import Task from "../database/models/task.model";
-import Record from "../database/models/record.model";
+import Record from "../database/models/assignment.model";
 import mongoose from "mongoose";
 import Application from "../database/models/application.model";
 

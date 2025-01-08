@@ -5,7 +5,7 @@ import { userInfo } from "./userInfo.action";
 import Admin from "../database/models/admin.model";
 import Task from "../database/models/task.model";
 import { revalidatePath } from "next/cache";
-import Record from "../database/models/record.model";
+import Record from "../database/models/assignment.model";
 import { connectToDatabase } from "../database/mongoose";
 import Track from "../database/models/track.model";
 import User from "../database/models/user.model";
