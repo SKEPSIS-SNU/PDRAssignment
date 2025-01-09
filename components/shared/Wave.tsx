@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 const WaveAnimation = ({ className }: { className?: string }) => {
   return (
-    <div className={cn("w-full overflow-hidden", className)}>
+    <div className={cn("w-full md:w-[110%] overflow-hidden", className)}>
       <svg
         viewBox="-30 -30 1997 157"
         strokeLinecap="round"
@@ -14,7 +14,7 @@ const WaveAnimation = ({ className }: { className?: string }) => {
         <motion.path
           fill="none"
           stroke="#7c3aed"
-          strokeWidth="60"
+          strokeWidth="50"
           d="M0.5 86.5C91 22.1667 604.9 -67.9 1936.5 86.5"
           initial={{ pathLength: 0 }}
           whileInView={{ pathLength: 1 }}

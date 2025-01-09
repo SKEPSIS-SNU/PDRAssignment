@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleCreateUserAndReturnData } from "@/lib/actions/user.actions";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { Instagram, Linkedin, Youtube } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -87,21 +88,52 @@ export default function Home() {
       <SignedIn>
         <main>
           <section className="w-full min-h-[60vh] flex flex-col gap-10 justify-between items-center md:flex-row lg:gap-16 py-8 md:py-0">
-            <div className="flex flex-col items-center text-center md:items-start md:text-left md:-translate-y-[15%]">
-              <p className="text-primary text-5xl font-semibold">Learn with</p>
+            <div className="flex flex-col items-center text-center md:items-start md:text-left gap-4 md:-translate-y-[10%]">
+              <p className="text-primary text-4xl sm:text-5xl font-semibold">
+                Learn with
+              </p>
               <div className="relative w-fit">
-                <p className="text-7xl font-bold mt-2">SKEPSIS</p>
-                <WaveAnimation className="absolute bottom-0 translate-y-[45%]" />
+                <p className="text-6xl sm:text-7xl font-bold md:-ml-1">
+                  SKEPSIS
+                </p>
+                <WaveAnimation className="absolute bottom-0 translate-y-[60%]" />
               </div>
 
-              <p className="text-lg text-muted-foreground tracking-wide mt-5 px-10 md:px-0 md:max-w-[600px]">
-                Discover tracks tailored to your interests, offering insights
-                into real-world projects, practical skills, and valuable
-                experiences to help you grow and succeed.
+              <p className="text-lg text-muted-foreground mt-3 tracking-wide px-8 md:px-0 md:max-w-[600px]">
+                Discover tracks tailored to{" "}
+                <span className="text-foreground"> your interests</span>,
+                offering insights into{" "}
+                <span className="text-foreground">real-world projects</span>,
+                <span className="text-foreground">practical skills</span>, and
+                valuable experiences to help you grow and succeed.
               </p>
+
+              <div className="flex flex-wrap justify-center items-center gap-4 mt-2">
+                <Button
+                  variant={"ghost"}
+                  size={"icon"}
+                  className="rounded-full bg-accent/60"
+                >
+                  <Instagram />
+                </Button>
+                <Button
+                  variant={"ghost"}
+                  size={"icon"}
+                  className="rounded-full bg-accent/60"
+                >
+                  <Linkedin />
+                </Button>
+                <Button
+                  variant={"ghost"}
+                  size={"icon"}
+                  className="rounded-full bg-accent/60"
+                >
+                  <Youtube />
+                </Button>
+              </div>
             </div>
 
-            <div className="w-[60%] md:w-[40%] max-w-[450px] aspect-square bg-accent dark:bg-accent/50 rounded-2xl flex-shrink-0"></div>
+            <div className="w-[70%] md:w-[40%] max-w-[450px] aspect-square bg-accent dark:bg-accent/50 rounded-2xl flex-shrink-0"></div>
           </section>
           <Suspense
             fallback={
