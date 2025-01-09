@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "../ui/button";
-import { handleRequest } from "@/lib/actions/user.actions";
 import { useToast } from "@/hooks/use-toast";
+import { handleRequest } from "@/lib/actions/track.actions";
 
 const AcceptOrReject = ({
   applicantId,

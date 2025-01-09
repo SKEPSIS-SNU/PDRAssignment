@@ -5,33 +5,20 @@ import { currentUser } from "@clerk/nextjs/server";
 export async function userInfo() {
   try {
     const user = await currentUser();
-    if (user) {
-      return {
-        userId: user.id!,
-        userName: user.username!,
-        userMail: user.emailAddresses[0].emailAddress!,
-        userImage: user.imageUrl!,
-        firstName: user.firstName ? user.firstName : "",
-        lastName: user.lastName ? user.lastName : "",
-      };
-    } else {
-      return {
-        userId: null,
-        userName: null,
-        userImage: null,
-        userMail: null,
-        firstName: null,
-        lastName: null,
-      };
-    }
+    return {
+      clerk_id: user?.id || "",
+      user_email: user?.emailAddresses[0].emailAddress || "",
+      user_image: user?.imageUrl || "",
+      first_name: user?.firstName || "",
+      last_name: user?.lastName || "",
+    };
   } catch (error: any) {
     return {
-      userId: null,
-      userName: null,
-      userImage: null,
-      userMail: null,
-      firstName: null,
-      lastName: null,
+      clerk_id: "",
+      user_email: "",
+      user_image: "",
+      first_name: "",
+      last_name: "",
     };
   }
 }

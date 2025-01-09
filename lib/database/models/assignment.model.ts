@@ -16,7 +16,7 @@ const AssignmentSchema = new Schema({
   task_id: { type: Schema.Types.ObjectId, ref: "Task", required: true },
   status: {
     type: String,
-    enum: ["in-progress", "review", "completed"],
+    enum: ["in-progress", "review", "completed", "expired"],
     default: "in-progress",
   },
   note: { type: String, default: "" },
@@ -27,6 +27,9 @@ const AssignmentSchema = new Schema({
     ref: "Submission",
     default: null,
   },
+  github_link: { type: String, default: "" },
+  kaggle_link: { type: String, default: "" },
+  website_link: { type: String, default: "" },
 });
 AssignmentSchema.index({ user_id: 1, task_id: 1 }, { unique: true });
 

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import Admin from "../database/models/admin.model";
-import Record from "../database/models/assignment.model";
 import Track from "../database/models/track.model";
 import User from "../database/models/user.model";
 import { connectToDatabase } from "../database/mongoose";
@@ -10,19 +9,21 @@ import { userInfo } from "./userInfo.action";
 import mongoose from "mongoose";
 import Task from "../database/models/task.model";
 import Application from "../database/models/application.model";
+import Membership from "../database/models/membership.model";
+import Assignment from "../database/models/assignment.model";
 
 export async function createTrack({
-  label,
   trackName,
+  trackBanner,
   trackDescription,
 }: {
-  label: string;
   trackName: string;
+  trackBanner: string;
   trackDescription: string;
 }) {
-  const { userId, userName, userMail } = await userInfo();
+  const { clerk_id, user_email } = await userInfo();
 
-  if (!userId || !userName || !userMail) {
+  if (!clerk_id || !user_email) {
     return {
       success: false,
       isAdmin: false,
@@ -34,9 +35,8 @@ export async function createTrack({
     await connectToDatabase();
 
     const admin = await Admin.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
+      clerk_id,
+      email: user_email,
     });
 
     if (!admin) {
@@ -46,13 +46,10 @@ export async function createTrack({
       };
     }
 
-    const formattedLabel = label.trim().replace(/\s+/g, "-").toLowerCase();
-
     const track = await Track.create({
-      label: formattedLabel,
-      trackName,
-      trackDescription,
-      createdAt: new Date(),
+      track_name: trackName,
+      banner: trackBanner,
+      track_description: trackDescription,
     });
 
     if (!track) {
@@ -74,382 +71,11 @@ export async function createTrack({
   }
 }
 
-export async function getTracks() {
-  const { userId, userName, userMail } = await userInfo();
-
-  if (!userId || !userName || !userMail) {
-    return {
-      success: false,
-      isAdmin: false,
-      message: "Received incomplete user info",
-    };
-  }
-
-  try {
-    await connectToDatabase();
-
-    // Find the user in the database
-    const user = await User.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
-    });
-
-    if (!user) {
-      return {
-        success: false,
-        isAdmin: false,
-        message: "User not found in the database",
-      };
-    }
-
-    // Check if the user is an admin
-    const admin = await Admin.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
-    });
-
-    let tracks;
-
-    if (admin) {
-      // Admin: Fetch all tracks
-      const fetchedTracks = await Track.find();
-      tracks = fetchedTracks.map((track, index) => ({
-        name: track.trackName,
-        path: index === 0 ? "/" : `/${track._id}`,
-      }));
-    } else {
-      // Regular User: Fetch tracks linked to their records
-      const records = await Record.find({ uid: user._id }).select("trackId");
-      const trackIds = records.map((record) => record.trackId);
-
-      const fetchedTracks = await Track.find({ _id: { $in: trackIds } });
-      tracks = fetchedTracks.map((track, index) => ({
-        name: track.trackName,
-        path: index === 0 ? "/" : `/${track._id}`,
-      }));
-    }
-
-    return {
-      success: true,
-      isAdmin: !!admin,
-      tracks: JSON.parse(JSON.stringify(tracks)),
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      isAdmin: false,
-      message: error.message || "Something went wrong",
-    };
-  }
-}
-
-// export async function checkAndGetTrack(trackId: string) {
-//   if (!mongoose.Types.ObjectId.isValid(trackId)) {
-//     return {
-//       success: false,
-//       message: "Invalid track ID",
-//     };
-//   }
-
-//   try {
-//     const { userId, userName, userMail } = await userInfo();
-
-//     if (!userId || !userName || !userMail) {
-//       return {
-//         success: false,
-//         message: "Received incomplete user info",
-//       };
-//     }
-
-//     await connectToDatabase();
-
-//     // Check if the user is an admin
-//     const isAdmin = await Admin.findOne({
-//       clerk_id: userId,
-//       email: userMail,
-//       username: userName,
-//     });
-
-//     let track,
-//       tasks = [];
-
-//     if (isAdmin) {
-//       // Admin: Fetch track and tasks directly
-//       track = await Track.findById(trackId);
-//       if (!track) {
-//         return {
-//           success: false,
-//           message: "Track not found",
-//         };
-//       }
-
-//       tasks = await Task.find({ trackId: track._id }).select(
-//         "_id trackId taskName taskDescription deadLine currentDate"
-//       );
-//     } else {
-//       // Non-admin: Fetch track and tasks with additional details
-//       const user = await User.findOne({
-//         clerk_id: userId,
-//         email: userMail,
-//         username: userName,
-//       });
-
-//       if (!user) {
-//         return {
-//           success: false,
-//           message: "User not found",
-//         };
-//       }
-
-//       // Check the user's records to find their associated track
-//       const record = await Record.findOne({ uid: user._id, trackId: trackId });
-//       if (!record) {
-//         return {
-//           success: false,
-//           message: "Track not found in user's records",
-//         };
-//       }
-
-//       track = await Track.findById(trackId);
-//       if (!track) {
-//         return {
-//           success: false,
-//           message: "Track not found",
-//         };
-//       }
-
-//       const rawTasks = await Task.find({ trackId: track._id }).select(
-//         "_id trackId taskName taskDescription deadLine currentDate"
-//       );
-
-//       tasks = rawTasks.map((task) => {
-//         const taskInfo = record.tasksInfo.find(
-//           (info: any) => info.taskId.toString() === task._id.toString()
-//         );
-
-//         return {
-//           ...task.toObject(),
-//           taskStatus: taskInfo?.taskStatus || "in-progress",
-//           taskErrorNote: taskInfo?.taskErrorNote || "",
-//           taskGitHubUrl: taskInfo?.taskGitHubUrl || "",
-//           taskKglUrl: taskInfo?.taskKglUrl || "",
-//           taskWebUrl: taskInfo?.taskWebUrl || "",
-//         };
-//       });
-//     }
-
-//     return {
-//       success: true,
-//       isAdmin: !!isAdmin,
-//       track: JSON.parse(JSON.stringify(track)),
-//       tasks: JSON.parse(JSON.stringify(tasks)),
-//     };
-//   } catch (error: any) {
-//     return {
-//       success: false,
-//       message: error.message || "Something went wrong",
-//     };
-//   }
-// }
-
-// export async function checkAndGetTrack(trackId: string) {
-//   if (!mongoose.Types.ObjectId.isValid(trackId)) {
-//     return {
-//       success: false,
-//       message: "Invalid track ID",
-//     };
-//   }
-//   try {
-//     const { userId, userName, userMail } = await userInfo();
-
-//     if (!userId || !userName || !userMail) {
-//       return {
-//         success: false,
-//         message: "Received incomplete user info",
-//       };
-//     }
-
-//     await connectToDatabase();
-
-//     // Check if the user is an admin
-//     const isAdmin = await Admin.findOne({
-//       clerk_id: userId,
-//       email: userMail,
-//       username: userName,
-//     });
-
-//     let track,
-//       tasks = [];
-
-//     if (isAdmin) {
-//       // If the user is an admin, fetch the track details and all associated tasks
-//       track = await Track.findById(trackId);
-//       if (!track) {
-//         return {
-//           success: false,
-//           message: "Track not found",
-//         };
-//       }
-//       // Fetch all tasks associated with the track
-//       tasks = await Task.find({ trackId: track._id });
-//     } else {
-//       // If the user is not an admin, check if they have access to the track through their records
-//       const user = await User.findOne({
-//         clerk_id: userId,
-//         email: userMail,
-//         username: userName,
-//       });
-
-//       if (!user) {
-//         return {
-//           success: false,
-//           message: "User not found",
-//         };
-//       }
-
-//       // Check the user's records to find their associated track
-//       const record = await Record.findOne({ uid: user._id, trackId: trackId });
-//       if (!record) {
-//         return {
-//           success: false,
-//           message: "Track not found in user's records",
-//         };
-//       }
-
-//       // Fetch tasks for the user's associated track
-//       track = await Track.findById(trackId);
-//       if (track) {
-//         tasks = await Task.find({
-//           trackId: track._id,
-//           "usersWithStatus.userId": user._id,
-//         });
-//       } else {
-//         return {
-//           success: false,
-//           message: "Track not found",
-//         };
-//       }
-//     }
-
-//     return {
-//       success: true,
-//       isAdmin: !!isAdmin,
-//       track: JSON.parse(JSON.stringify(track)),
-//       tasks: JSON.parse(JSON.stringify(tasks)),
-//     };
-//   } catch (error: any) {
-//     return {
-//       success: false,
-//       message: error.message || "Something went wrong",
-//     };
-//   }
-// }
-export async function checkAndGetTrack(trackId: string) {
-  if (!mongoose.Types.ObjectId.isValid(trackId)) {
-    return {
-      success: false,
-      message: "Invalid track ID",
-    };
-  }
-
-  try {
-    const { userId, userName, userMail } = await userInfo();
-
-    if (!userId || !userName || !userMail) {
-      return {
-        success: false,
-        message: "Received incomplete user info",
-      };
-    }
-
-    await connectToDatabase();
-
-    // Check if the user is an admin
-    const isAdmin = await Admin.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
-    });
-
-    const track = await Track.findById(trackId);
-    if (!track) {
-      return {
-        success: false,
-        message: "Track not found",
-      };
-    }
-
-    let tasks = [];
-    if (isAdmin) {
-      // Admin: Return all tasks associated with the track
-      tasks = await Task.find({ trackId: track._id });
-    } else {
-      // Non-admin: Fetch user's record for the track and include task-specific fields
-      const user = await User.findOne({
-        clerk_id: userId,
-        email: userMail,
-        username: userName,
-      });
-
-      if (!user) {
-        return {
-          success: false,
-          message: "User not found",
-        };
-      }
-
-      const record = await Record.findOne({ uid: user._id, trackId: trackId });
-      if (!record) {
-        return {
-          success: false,
-          message: "Track not found in user's records",
-        };
-      }
-
-      const taskIds = record.tasksInfo.map((info: any) => info.taskId);
-      const allTasks = await Task.find({ _id: { $in: taskIds } });
-
-      tasks = allTasks.map((task) => {
-        const taskInfo = record.tasksInfo.find(
-          (info: any) => info.taskId.toString() === task._id.toString()
-        );
-        return {
-          _id: task._id,
-          trackId: task.trackId,
-          taskName: task.taskName,
-          taskDescription: task.taskDescription,
-          deadLine: task.deadLine,
-          currentDate: task.currentDate,
-          taskStatus: taskInfo?.taskStatus || "in-progress",
-          taskErrorNote: taskInfo?.taskErrorNote || "",
-          taskGitHubUrl: taskInfo?.taskGitHubUrl || "",
-          taskKglUrl: taskInfo?.taskKglUrl || "",
-          taskWebUrl: taskInfo?.taskWebUrl || "",
-        };
-      });
-    }
-
-    return {
-      success: true,
-      isAdmin: !!isAdmin,
-      track: JSON.parse(JSON.stringify(track)),
-      tasks: JSON.parse(JSON.stringify(tasks)),
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      message: error.message || "Something went wrong",
-    };
-  }
-}
-
 export async function getRemainingTracks() {
   try {
-    const { userId, userName, userMail } = await userInfo();
+    const { clerk_id, user_email } = await userInfo();
 
-    if (!userId || !userName || !userMail) {
+    if (!clerk_id || !user_email) {
       return {
         success: false,
         message: "Received incomplete user info",
@@ -458,11 +84,8 @@ export async function getRemainingTracks() {
 
     await connectToDatabase();
 
-    const user = await User.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
-    });
+    // Find the user
+    const user = await User.findOne({ clerk_id, email: user_email });
 
     if (!user) {
       return {
@@ -471,22 +94,31 @@ export async function getRemainingTracks() {
       };
     }
 
-    // Find the trackIds that the user is associated with (through their records)
-    const userRecords = await Record.find({ uid: user._id }).select("trackId");
-    const userTrackIds = userRecords.map((record) => record.trackId);
-
-    // Find the tracks the user has already applied for
-    const userApplications = await Application.find({ uid: user._id }).select(
-      "trackId"
+    // Fetch tracks the user is a member of
+    const userMemberships = await Membership.find({ user_id: user._id }).select(
+      "track_id"
     );
+    const memberTrackIds = userMemberships.map(
+      (membership) => membership.track_id
+    );
+
+    // Fetch tracks the user has sent applications to
+    const userApplications = await Application.find({
+      user_id: user._id,
+    }).select("track_id");
     const appliedTrackIds = userApplications.map(
-      (application) => application.trackId
+      (application) => application.track_id
     );
 
-    // Find all tracks where the user is NOT associated with and has not applied to
+    // Combine the exclusion list
+    const excludedTrackIds = [...memberTrackIds, ...appliedTrackIds];
+
+    // Fetch tracks the user is NOT a member of and has NOT applied to
     const remainingTracks = await Track.find({
-      _id: { $nin: [...userTrackIds, ...appliedTrackIds] }, // Exclude tracks the user is already associated with or has applied to
-    }).select("_id trackName trackDescription label");
+      _id: { $nin: excludedTrackIds },
+    })
+      .select("_id track_name track_description banner")
+      .sort({ createdAt: -1 });
 
     return {
       success: true,
@@ -509,9 +141,9 @@ export async function makeTrackApplicationAndReturnNewData(trackId: string) {
   }
 
   try {
-    const { userId, userName, userMail } = await userInfo();
+    const { clerk_id, user_email } = await userInfo();
 
-    if (!userId || !userName || !userMail) {
+    if (!clerk_id || !user_email) {
       return {
         success: false,
         message: "Received incomplete user info",
@@ -521,9 +153,8 @@ export async function makeTrackApplicationAndReturnNewData(trackId: string) {
     await connectToDatabase();
 
     const user = await User.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
+      clerk_id,
+      email: user_email,
     });
 
     if (!user) {
@@ -535,8 +166,8 @@ export async function makeTrackApplicationAndReturnNewData(trackId: string) {
 
     // Check if the user has already applied to this track
     const existingApplication = await Application.findOne({
-      uid: user._id,
-      trackId,
+      user_id: user._id,
+      track_id: trackId,
     });
 
     if (existingApplication) {
@@ -547,14 +178,18 @@ export async function makeTrackApplicationAndReturnNewData(trackId: string) {
     }
 
     // Create a new application
-    const newApplication = new Application({
-      uid: user._id,
-      trackId,
+    const newApplication = Application.create({
+      user_id: user._id,
+      track_id: trackId,
     });
 
-    await newApplication.save();
+    if (!newApplication) {
+      return {
+        success: false,
+        message: "Failed to create application",
+      };
+    }
 
-    // Now fetch the remaining tracks after the application is submitted
     const { success, remainingTracks } = await getRemainingTracks();
 
     if (!success) {
@@ -577,6 +212,103 @@ export async function makeTrackApplicationAndReturnNewData(trackId: string) {
   }
 }
 
+export async function checkAndGetTrack(trackId: string) {
+  if (!mongoose.Types.ObjectId.isValid(trackId)) {
+    return {
+      success: false,
+      message: "Invalid track ID",
+    };
+  }
+
+  try {
+    const { clerk_id, user_email } = await userInfo();
+
+    if (!clerk_id || !user_email) {
+      return {
+        success: false,
+        message: "Received incomplete user info",
+      };
+    }
+
+    await connectToDatabase();
+
+    // Check if the user is an admin
+    const isAdmin = await Admin.findOne({ clerk_id, email: user_email });
+
+    const track = await Track.findById(trackId);
+    if (!track) {
+      return {
+        success: false,
+        message: "Track not found",
+      };
+    }
+
+    let tasks = [];
+    if (isAdmin) {
+      tasks = await Task.find({ track_id: track._id });
+    } else {
+      const user = await User.findOne({ clerk_id, email: user_email });
+
+      if (!user) {
+        return {
+          success: false,
+          message: "User not found",
+        };
+      }
+
+      const membership = await Membership.findOne({
+        user_id: user._id,
+        track_id: trackId,
+      });
+
+      if (!membership) {
+        return {
+          success: false,
+          message: "You are not a member of this track",
+        };
+      }
+
+      // Fetch all tasks in the track
+      const trackTasks = await Task.find({ track_id: track._id }).select(
+        "_id task_name task_description image read_more dead_line currentDate"
+      );
+
+      // Fetch assignments for the user
+      const assignments = await Assignment.find({
+        user_id: user._id,
+        task_id: { $in: trackTasks.map((task) => task._id) },
+      });
+
+      // Map assignments to tasks
+      tasks = trackTasks.map((task) => {
+        const assignment = assignments.find(
+          (a) => a.task_id.toString() === task._id.toString()
+        );
+        return {
+          ...task.toObject(),
+          status: assignment.status,
+          note: assignment.note,
+          error_note: assignment.error_note,
+          is_edited: assignment.is_edited,
+          submission_id: assignment.submission_id,
+        };
+      });
+    }
+
+    return {
+      success: true,
+      isAdmin: !!isAdmin,
+      track: JSON.parse(JSON.stringify(track)),
+      tasks: JSON.parse(JSON.stringify(tasks)),
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || "Something went wrong",
+    };
+  }
+}
+
 export async function checkAccesstoTrackAndReturnApplications(trackId: string) {
   if (!mongoose.Types.ObjectId.isValid(trackId)) {
     return {
@@ -586,9 +318,9 @@ export async function checkAccesstoTrackAndReturnApplications(trackId: string) {
   }
 
   try {
-    const { userId, userName, userMail } = await userInfo();
+    const { clerk_id, user_email } = await userInfo();
 
-    if (!userId || !userName || !userMail) {
+    if (!clerk_id || !user_email) {
       return {
         success: false,
         message: "Received incomplete user info",
@@ -599,9 +331,8 @@ export async function checkAccesstoTrackAndReturnApplications(trackId: string) {
 
     // Check if the user is an admin
     const admin = await Admin.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
+      clerk_id,
+      email: user_email,
     });
 
     if (!admin) {
@@ -613,7 +344,7 @@ export async function checkAccesstoTrackAndReturnApplications(trackId: string) {
 
     // Check if the track exists
     const track = await Track.findOne({ _id: trackId }).select(
-      "_id trackName trackDescription label"
+      "_id track_name track_description banner"
     );
 
     if (!track) {
@@ -623,11 +354,11 @@ export async function checkAccesstoTrackAndReturnApplications(trackId: string) {
       };
     }
 
-    const applications = await Application.find({ trackId })
-      .populate("uid", "username email photo first_name last_name")
-      .select("uid");
+    const applications = await Application.find({ track_id: trackId })
+      .populate("user_id", "email photo first_name last_name")
+      .select("user_id");
 
-    const applicants = applications.map((application) => application.uid);
+    const applicants = applications.map((application) => application.user_id);
 
     return {
       success: true,
@@ -642,27 +373,34 @@ export async function checkAccesstoTrackAndReturnApplications(trackId: string) {
   }
 }
 
-export async function assignTaskToAllTrackMember({
+type HandleRequestResponse = {
+  success: boolean;
+  message: string;
+};
+
+export async function handleRequest({
+  type,
   trackId,
-  taskId,
+  applicantId,
 }: {
+  type: "accept" | "reject";
   trackId: string;
-  taskId: string;
-}) {
+  applicantId: string;
+}): Promise<HandleRequestResponse> {
   if (
     !mongoose.Types.ObjectId.isValid(trackId) ||
-    !mongoose.Types.ObjectId.isValid(taskId)
+    !mongoose.Types.ObjectId.isValid(applicantId)
   ) {
     return {
       success: false,
-      message: "Invalid track ID or task ID",
+      message: "Invalid trackId or applicantId",
     };
   }
 
   try {
-    const { userId, userName, userMail } = await userInfo();
+    const { clerk_id, user_email } = await userInfo();
 
-    if (!userId || !userName || !userMail) {
+    if (!clerk_id || !user_email) {
       return {
         success: false,
         message: "Received incomplete user info",
@@ -671,11 +409,10 @@ export async function assignTaskToAllTrackMember({
 
     await connectToDatabase();
 
-    // Check if the user is an admin
+    // Verify the admin's access
     const admin = await Admin.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
+      clerk_id,
+      email: user_email,
     });
 
     if (!admin) {
@@ -685,16 +422,6 @@ export async function assignTaskToAllTrackMember({
       };
     }
 
-    // Check if the task exists
-    const task = await Task.findOne({ _id: taskId, trackId });
-    if (!task) {
-      return {
-        success: false,
-        message: "Task not found or doesn't belong to the specified track",
-      };
-    }
-
-    // Check if the track exists
     const track = await Track.findById(trackId);
     if (!track) {
       return {
@@ -703,39 +430,75 @@ export async function assignTaskToAllTrackMember({
       };
     }
 
-    // Retrieve all records (users) associated with the track
-    const records = await Record.find({ trackId }).populate("uid", "_id");
-
-    if (!records.length) {
+    const application = await Application.findOne({
+      track_id: trackId,
+      user_id: applicantId,
+    });
+    if (!application) {
       return {
         success: false,
-        message: "No users found in this track",
+        message: "Application not found",
       };
     }
 
-    const userIds = records.map((record) => record.uid._id);
+    let responseMessage = "";
 
-    // Update Task's `usersWithStatus` field
-    const usersWithStatusUpdates = userIds.map((userId) => ({
-      userId,
-      status: "in-progress", // Default status
-    }));
+    if (type === "accept") {
+      const existingRecord = await Membership.findOne({
+        track_id: trackId,
+        user_id: applicantId,
+      });
 
-    await Task.updateOne(
-      { _id: taskId },
-      { $addToSet: { usersWithStatus: { $each: usersWithStatusUpdates } } }
-    );
+      if (existingRecord) {
+        return {
+          success: false,
+          message: "User is already a member of this track",
+        };
+      }
 
-    // Update Users' Records to include the task
-    await Promise.all(
-      records.map((record) =>
-        Record.updateOne({ _id: record._id }, { $addToSet: { tasks: taskId } })
-      )
-    );
+      const newMembership = await Membership.create({
+        track_id: trackId,
+        user_id: applicantId,
+      });
+
+      if (!newMembership) {
+        return {
+          success: false,
+          message: "Failed to create membership record",
+        };
+      }
+
+      // Create assignments for all tasks in the track
+      const tasks = await Task.find({ track_id: trackId });
+      if (tasks.length > 0) {
+        const assignments = tasks.map((task) => ({
+          user_id: applicantId,
+          task_id: task._id,
+        }));
+
+        await Assignment.insertMany(assignments);
+      }
+
+      // Remove the application
+      await Application.deleteOne({ _id: application._id });
+
+      responseMessage = "Application accepted successfully";
+    } else if (type === "reject") {
+      await Application.deleteOne({ _id: application._id });
+
+      responseMessage = "Application rejected";
+    } else {
+      return {
+        success: false,
+        message: "Invalid request type",
+      };
+    }
+
+    revalidatePath(`/${trackId}/applications`);
 
     return {
       success: true,
-      message: "Task successfully assigned to all track members",
+      message: responseMessage,
     };
   } catch (error: any) {
     return {

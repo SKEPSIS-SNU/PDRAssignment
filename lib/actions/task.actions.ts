@@ -5,21 +5,30 @@ import { userInfo } from "./userInfo.action";
 import Admin from "../database/models/admin.model";
 import Task from "../database/models/task.model";
 import { revalidatePath } from "next/cache";
-import Record from "../database/models/assignment.model";
 import { connectToDatabase } from "../database/mongoose";
 import Track from "../database/models/track.model";
 import User from "../database/models/user.model";
 import Submission from "../database/models/submissions.model";
+import Membership from "../database/models/membership.model";
+import Assignment from "../database/models/assignment.model";
+
+type createTaskProps = {
+  trackId: string;
+  taskName: string;
+  taskDescription: string;
+  readMore: string;
+  image: string;
+  deadLine: number;
+};
 
 export async function createTask({
   trackId,
   taskName,
   taskDescription,
-}: {
-  trackId: string;
-  taskName: string;
-  taskDescription: string;
-}) {
+  readMore,
+  image,
+  deadLine,
+}: createTaskProps) {
   if (!mongoose.Types.ObjectId.isValid(trackId)) {
     return {
       success: false,
@@ -28,19 +37,21 @@ export async function createTask({
   }
 
   try {
-    const { userId, userName, userMail } = await userInfo();
+    const { clerk_id, user_email } = await userInfo();
 
-    if (!userId || !userName || !userMail) {
+    if (!clerk_id || !user_email) {
       return {
         success: false,
         message: "User not found",
       };
     }
 
+    await connectToDatabase();
+
+    // Check if the user is an admin
     const isAdmin = await Admin.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
+      clerk_id,
+      email: user_email,
     });
 
     if (!isAdmin) {
@@ -52,11 +63,12 @@ export async function createTask({
 
     // Create the task
     const task = await Task.create({
-      trackId,
-      taskName,
-      taskDescription,
-      deadLine: 7, // Default deadline
-      currentDate: 0, // Default current day
+      track_id: trackId,
+      task_name: taskName,
+      task_description: taskDescription,
+      read_more: readMore,
+      image,
+      dead_line: deadLine,
     });
 
     if (!task) {
@@ -66,27 +78,21 @@ export async function createTask({
       };
     }
 
-    // Update all user records associated with the track
-    const records = await Record.find({ trackId });
+    // Fetch all members of the track
+    const members = await Membership.find({ track_id: trackId });
+    if (members.length > 0) {
+      const assignments = members.map((member) => ({
+        user_id: member.user_id,
+        task_id: task._id,
+      }));
 
-    for (const record of records) {
-      // Check if the task already exists in the record
-      const taskExists = record.tasksInfo.some(
-        (taskInfo: any) => taskInfo.taskId.toString() === task._id.toString()
-      );
+      const createdAssignments = await Assignment.insertMany(assignments);
 
-      if (!taskExists) {
-        // Add the new task to the tasksInfo array
-        record.tasksInfo.push({
-          taskId: task._id,
-          taskStatus: "in-progress",
-          taskErrorNote: "",
-          submissionId: null,
-          taskGitHubUrl: "",
-          taskKglUrl: "",
-          taskWebUrl: "",
-        });
-        await record.save(); // Save the updated record
+      if (createdAssignments.length !== members.length) {
+        return {
+          success: false,
+          message: "Failed to create assignments for all members",
+        };
       }
     }
 
@@ -96,7 +102,7 @@ export async function createTask({
 
     return {
       success: true,
-      message: "Task created and records updated successfully",
+      message: "Task created and assignments generated successfully",
     };
   } catch (error: any) {
     return {
@@ -130,9 +136,9 @@ export async function submitTask({
   }
 
   try {
-    const { userId, userName, userMail } = await userInfo();
+    const { clerk_id, user_email } = await userInfo();
 
-    if (!userId || !userName || !userMail) {
+    if (!clerk_id || !user_email) {
       return {
         success: false,
         message: "User not found",
@@ -158,9 +164,8 @@ export async function submitTask({
     }
 
     const user = await User.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
+      clerk_id,
+      email: user_email,
     });
 
     if (!user) {
@@ -172,9 +177,9 @@ export async function submitTask({
 
     // Create a new submission
     const submission = await Submission.create({
-      uid: user._id,
-      trackId,
-      taskId,
+      user_id: user._id,
+      track_id: trackId,
+      task_id: taskId,
     });
 
     if (!submission) {
@@ -184,26 +189,25 @@ export async function submitTask({
       };
     }
 
-    // Update user's record for the task
-    const recordUpdateResult = await Record.updateOne(
-      { uid: user._id, trackId, "tasksInfo.taskId": taskId },
+    const assignment = await Assignment.findOneAndUpdate(
+      { user_id: user._id, task_id: taskId },
       {
-        $set: {
-          "tasksInfo.$.taskStatus": "review",
-          "tasksInfo.$.submissionId": submission._id,
-          "tasksInfo.$.taskGitHubUrl": gitHubLink,
-          "tasksInfo.$.taskKglUrl": kglLink,
-          "tasksInfo.$.taskWebUrl": webLink,
-        },
+        status: "review",
+        submission_id: submission._id,
+        github_link: gitHubLink,
+        kaggle_link: kglLink,
+        website_link: webLink,
       }
     );
 
-    if (recordUpdateResult.modifiedCount === 0) {
+    if (!assignment) {
+      await Submission.findByIdAndDelete(submission._id);
       return {
         success: false,
-        message: "Failed to update user record",
+        message: "Failed to submit assignment",
       };
     }
+
     revalidatePath(`/${trackId}`);
     return {
       success: true,
@@ -216,121 +220,6 @@ export async function submitTask({
     };
   }
 }
-
-// export async function checkAccToSubmissionsAndReturnSubmissions(
-//   trackId: string,
-//   taskId: string
-// ) {
-//   if (
-//     !mongoose.Types.ObjectId.isValid(trackId) ||
-//     !mongoose.Types.ObjectId.isValid(taskId)
-//   ) {
-//     return {
-//       success: false,
-//       message: "Invalid trackId or taskId",
-//     };
-//   }
-
-//   try {
-//     const { userId, userName, userMail } = await userInfo();
-
-//     if (!userId || !userName || !userMail) {
-//       return {
-//         success: false,
-//         message: "User not found",
-//       };
-//     }
-
-//     await connectToDatabase();
-
-//     const track = await Track.findById(trackId);
-//     if (!track) {
-//       return {
-//         success: false,
-//         message: "Track not found",
-//       };
-//     }
-
-//     const task = await Task.findById(taskId);
-//     if (!task) {
-//       return {
-//         success: false,
-//         message: "Task not found",
-//       };
-//     }
-
-//     const isAdmin = await Admin.findOne({
-//       clerk_id: userId,
-//       email: userMail,
-//       username: userName,
-//     });
-
-//     if (!isAdmin) {
-//       return {
-//         success: false,
-//         message: "You don't have access to this page",
-//       };
-//     }
-
-//     // Fetch all submissions for the given track and task
-//     const submissions = await Submission.find({ trackId, taskId }).populate({
-//       path: "uid",
-//       select: "photo username email first_name last_name",
-//     });
-
-//     // Fetch task details
-//     const taskDetails = {
-//       taskName: task.taskName,
-//       taskDescription: task.taskDescription,
-//       deadLine: task.deadLine, // deadLine as a number
-//     };
-
-//     // Map submissions to include required fields
-//     const submissionDetails = await Promise.all(
-//       submissions.map(async (submission) => {
-//         const record = await Record.findOne({
-//           uid: submission.uid._id,
-//           trackId,
-//           "tasksInfo.taskId": taskId,
-//         });
-
-//         return {
-//           submissionId: submission._id.toString(), // Adding the submissionId field
-//           uid: submission.uid._id.toString(),
-//           photo: submission.uid.photo,
-//           username: submission.uid.username,
-//           email: submission.uid.email,
-//           first_name: submission.uid.first_name,
-//           last_name: submission.uid.last_name,
-//           trackId: submission.trackId.toString(),
-//           taskId: submission.taskId.toString(),
-//           taskName: taskDetails.taskName,
-//           taskDescription: taskDetails.taskDescription,
-//           deadLine: taskDetails.deadLine, // deadLine is a number
-//           taskGitHubUrl:
-//             record?.tasksInfo?.find((t: any) => t.taskId.toString() === taskId)
-//               ?.taskGitHubUrl || "",
-//           taskKglUrl:
-//             record?.tasksInfo?.find((t: any) => t.taskId.toString() === taskId)
-//               ?.taskKglUrl || "",
-//           taskWebUrl:
-//             record?.tasksInfo?.find((t: any) => t.taskId.toString() === taskId)
-//               ?.taskWebUrl || "",
-//         };
-//       })
-//     );
-
-//     return {
-//       success: true,
-//       submissions: submissionDetails,
-//     };
-//   } catch (error: any) {
-//     return {
-//       success: false,
-//       message: error.message || "Something went wrong",
-//     };
-//   }
-// }
 
 export async function checkAccToSubmissionsAndReturnSubmissions(
   trackId: string,
@@ -347,9 +236,9 @@ export async function checkAccToSubmissionsAndReturnSubmissions(
   }
 
   try {
-    const { userId, userName, userMail } = await userInfo();
+    const { clerk_id, user_email } = await userInfo();
 
-    if (!userId || !userName || !userMail) {
+    if (!clerk_id || !user_email) {
       return {
         success: false,
         message: "User not found",
@@ -375,9 +264,8 @@ export async function checkAccToSubmissionsAndReturnSubmissions(
     }
 
     const isAdmin = await Admin.findOne({
-      clerk_id: userId,
-      email: userMail,
-      username: userName,
+      clerk_id,
+      email: user_email,
     });
 
     if (!isAdmin) {
@@ -387,52 +275,23 @@ export async function checkAccToSubmissionsAndReturnSubmissions(
       };
     }
 
-    // Fetch all submissions for the given track and task
-    const submissions = await Submission.find({ trackId, taskId }).populate({
-      path: "uid",
-      select: "photo username email first_name last_name",
+    // Fetch submissions with user data populated
+    const submissions = await Assignment.find({
+      task_id: taskId,
+      status: "review",
+    }).populate({
+      path: "user_id",
+      select: "_id first_name last_name photo email", // Select only the fields you need
     });
 
-    // Map submissions to include required fields
-    const submissionDetails = await Promise.all(
-      submissions.map(async (submission) => {
-        const record = await Record.findOne({
-          uid: submission.uid._id,
-          trackId,
-          "tasksInfo.taskId": taskId,
-        });
-
-        return {
-          submissionId: submission._id.toString(),
-          uid: submission.uid._id.toString(),
-          photo: submission.uid.photo,
-          username: submission.uid.username,
-          email: submission.uid.email,
-          first_name: submission.uid.first_name,
-          last_name: submission.uid.last_name,
-          trackId: submission.trackId.toString(),
-          taskId: submission.taskId.toString(),
-          taskGitHubUrl:
-            record?.tasksInfo?.find((t: any) => t.taskId.toString() === taskId)
-              ?.taskGitHubUrl || "",
-          taskKglUrl:
-            record?.tasksInfo?.find((t: any) => t.taskId.toString() === taskId)
-              ?.taskKglUrl || "",
-          taskWebUrl:
-            record?.tasksInfo?.find((t: any) => t.taskId.toString() === taskId)
-              ?.taskWebUrl || "",
-        };
-      })
-    );
-
-    // Return the response in the desired format
     return {
       success: true,
-      trackName: track.trackName, // Assuming track model has this field
-      trackDescription: track.trackDescription, // Assuming track model has this field
-      taskName: task.taskName,
-      taskDescription: task.taskDescription,
-      submissions: submissionDetails,
+      trackName: track.track_name, // Assuming track model has this field
+      trackDescription: track.track_description, // Assuming track model has this field
+      trackBanner: track.banner,
+      taskName: task.task_name,
+      taskDescription: task.task_description,
+      submissions: JSON.parse(JSON.stringify(submissions)),
     };
   } catch (error: any) {
     return {
@@ -454,9 +313,9 @@ export async function handleSubmissionAcceptOrReject(
   }
 
   try {
-    const { userId, userName, userMail } = await userInfo();
+    const { clerk_id, user_email } = await userInfo();
 
-    if (!userId || !userName || !userMail) {
+    if (!clerk_id || !user_email) {
       return {
         success: false,
         message: "Received incomplete user info",
@@ -475,9 +334,8 @@ export async function handleSubmissionAcceptOrReject(
       }
 
       const isAdmin = await Admin.findOne({
-        clerk_id: userId,
-        email: userMail,
-        username: userName,
+        clerk_id,
+        email: user_email,
       });
 
       if (!isAdmin) {
@@ -489,20 +347,16 @@ export async function handleSubmissionAcceptOrReject(
 
       // Handle "accept" action
       if (type === "accept") {
-        const record = await Record.findOne({
-          uid: submission.uid._id,
-          trackId: submission.trackId,
-          "tasksInfo.taskId": submission.taskId,
-        });
+        const submission = await Submission.findById(submissionId);
 
-        if (record) {
-          record.tasksInfo = record.tasksInfo.map((task: any) =>
-            task.taskId.toString() === submission.taskId.toString()
-              ? { ...task, taskStatus: "completed", submissionId: null }
-              : task
-          );
-          await record.save();
-        }
+        await Assignment.findOneAndUpdate(
+          { submission_id: submissionId },
+          {
+            status: "completed",
+            note: "Submission accepted by admin",
+            submission_id: null,
+          }
+        );
 
         await Submission.findByIdAndDelete(submissionId);
 
@@ -515,20 +369,19 @@ export async function handleSubmissionAcceptOrReject(
           message: "Submission accepted successfully",
         };
       } else if (type === "reject") {
-        const record = await Record.findOne({
-          uid: submission.uid._id,
-          trackId: submission.trackId,
-          "tasksInfo.taskId": submission.taskId,
-        });
+        const submission = await Submission.findById(submissionId);
 
-        if (record) {
-          record.tasksInfo = record.tasksInfo.map((task: any) =>
-            task.taskId.toString() === submission.taskId.toString()
-              ? { ...task, taskStatus: "in-progress", submissionId: null }
-              : task
-          );
-          await record.save();
-        }
+        await Assignment.findOneAndUpdate(
+          { submission_id: submissionId },
+          {
+            status: "in-progress",
+            submission_id: null,
+            error_note: "Submission rejected by admin",
+            github_link: "",
+            kaggle_link: "",
+            website_link: "",
+          }
+        );
 
         await Submission.findByIdAndDelete(submissionId);
 
@@ -554,7 +407,6 @@ export async function handleSubmissionAcceptOrReject(
     };
   }
 
-  // Add a default return for safety
   return {
     success: false,
     message: "An unexpected error occurred",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,12 +19,12 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Track {
   _id: string;
-  trackName: string;
-  trackDescription: string;
-  label: string;
+  track_name: string;
+  track_description: string;
+  banner: string;
 }
 
-const JoinTrack = () => {
+const JoinTrack = ({ trigger }: { trigger: ReactNode }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState<boolean>(false); // For general loading
   const [applyingTrackId, setApplyingTrackId] = useState<string | null>(null); // For individual track loading
@@ -87,8 +87,8 @@ const JoinTrack = () => {
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button onClick={handleTrackLoad}>Join track</Button>
+      <DialogTrigger asChild onClick={handleTrackLoad}>
+        {trigger}
       </DialogTrigger>
 
       <DialogContent>
@@ -107,19 +107,22 @@ const JoinTrack = () => {
           <div>
             {tracks.length > 0 ? (
               <ul>
-                {tracks.map((track) => (
+                {tracks.map((track, index) => (
                   <li
                     key={track._id}
-                    className="flex w-full items-center justify-between p-2 gap-2"
+                    // className="flex w-full items-center justify-between p-2 gap-2 py-2"
+                    className={`${
+                      index === tracks.length - 1 && "border-none"
+                    } flex w-full items-center justify-between p-2 gap-2 py-4 border-b`}
                   >
-                    <p>{track.trackName}</p>
+                    <p>{track.track_name}</p>
                     <Button
+                      className="rounded-full"
                       onClick={() => handleApply(track._id)}
-                      variant="link"
                       disabled={applyingTrackId === track._id} // Disable button while applying
                     >
                       {applyingTrackId === track._id ? (
-                        <Loader2 className="animate-spin text-primary" />
+                        <Loader2 className="animate-spin text-foreground" />
                       ) : (
                         "Apply"
                       )}

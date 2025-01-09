@@ -1,6 +1,6 @@
 import CreateTask from "@/components/shared/CreateTask";
 import ErrorDiv from "@/components/shared/ErrorDiv";
-import Header from "@/components/shared/Header";
+import Intro from "@/components/shared/Intro";
 import TaskSubmitionForm from "@/components/shared/TaskSubmitionForm";
 import { Button } from "@/components/ui/button";
 import { checkAndGetTrack } from "@/lib/actions/track.actions";
@@ -12,38 +12,37 @@ async function CheckUserAccessAndRenderTrack({ trackId }: { trackId: string }) {
   const { success, message, isAdmin, tasks, track } = await checkAndGetTrack(
     trackId
   );
-  // console.log(success, message, isAdmin, tasks, track);
-  // console.log(track);
-  // console.log(tasks);
   return (
     <>
       {success ? (
         <>
           {track ? (
             <>
-              <Header
-                heading={track.trackName}
-                description={track.trackDescription}
-              />
               <main className="min-h-screen w-full">
-                <h2 className="text-xl text-muted-foreground font-semibold pb-4 border-b">
-                  {isAdmin ? `All tasks (${track.trackName})` : "Your tasks"}
-                </h2>
+                <Intro
+                  banner={track.banner}
+                  heading={track.track_name}
+                  description={track.track_description}
+                  isAdmin={!!isAdmin}
+                />
+                <div className="py-6 w-full flex flex-col md:flex-row justify-between gap-4 md:items-center border-b">
+                  <h2 className="text-xl font-semibold">
+                    {isAdmin ? `All tasks` : "Your tasks"}
+                  </h2>
 
-                {isAdmin && (
-                  <div className="flex gap-2 flex-row mt-4 flex-wrap justify-center items-center md:justify-end">
-                    {/* <Button asChild variant={"outline"}>
-                      <Link href={`/${track._id}/users`}>Users</Link>
-                    </Button> */}
-                    <Button asChild variant={"outline"}>
-                      <Link href={`/${track._id}/applications`}>
-                        Applications
-                      </Link>
-                    </Button>
+                  {isAdmin && (
+                    <div className="flex flex-col gap-4 md:flex-row">
+                      <Button asChild variant={"outline"}>
+                        <Link href={`/${track._id}/applications`}>
+                          Applications
+                        </Link>
+                      </Button>
 
-                    <CreateTask trackId={track._id} />
-                  </div>
-                )}
+                      <CreateTask trackId={track._id} />
+                    </div>
+                  )}
+                </div>
+
                 {tasks && (
                   <section className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {tasks.length > 0 ? (
@@ -54,13 +53,13 @@ async function CheckUserAccessAndRenderTrack({ trackId }: { trackId: string }) {
                         >
                           <div className="flex-1">
                             <p className="text-lg font-semibold text-primary">
-                              {task.taskName}
+                              {task.task_name}
                             </p>
                             <p className="text-muted-foreground">
-                              {task.taskDescription}
+                              {task.task_description}
                             </p>
                           </div>
-                          <div className="w-full flex justify-end gap-2">
+                          <div className="w-full flex flex-col">
                             {isAdmin ? (
                               <>
                                 <Button asChild variant={"secondary"}>
@@ -73,19 +72,30 @@ async function CheckUserAccessAndRenderTrack({ trackId }: { trackId: string }) {
                               </>
                             ) : (
                               <>
-                                {task.taskStatus === "in-progress" && (
+                                {task.note && <p>{task.note}</p>}
+                                {task.error_note && (
+                                  <p className="text-destructive">
+                                    {task.error_note}
+                                  </p>
+                                )}
+                                {task.status === "in-progress" && (
                                   <TaskSubmitionForm
                                     trackId={track._id}
                                     taskId={task._id}
                                   />
                                 )}
-                                {task.taskStatus === "review" && (
+                                {task.status === "review" && (
                                   <Button disabled variant={"secondary"}>
                                     Under Review
                                   </Button>
                                 )}
-                                {task.taskStatus === "completed" && (
+                                {task.status === "completed" && (
                                   <Button disabled>Completed</Button>
+                                )}
+                                {task.status === "expired" && (
+                                  <Button disabled variant={"destructive"}>
+                                    Expired
+                                  </Button>
                                 )}
                               </>
                             )}
@@ -120,7 +130,7 @@ const TrackPage = ({ params }: { params: { trackId: string } }) => {
   return (
     <Suspense
       fallback={
-        <main className="w-full min-h-screen fl_center">
+        <main className="w-full min-h-[50vh] fl_center">
           <Loader2 className="animate-spin text-primary w-10 h-10" />
         </main>
       }

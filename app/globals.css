@@ -82,4 +82,12 @@ body {
   .fl_center {
     @apply flex justify-center items-center;
   }
+  .card_hover:hover .img {
+    @apply scale-105;
+  }
+  .wrapper,
+  main,
+  header {
+    @apply px-6 lg:px-10 max-w-7xl mx-auto;
+  }
 }

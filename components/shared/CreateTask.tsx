@@ -25,9 +25,11 @@ import { useToast } from "@/hooks/use-toast";
 import { createTask } from "@/lib/actions/task.actions";
 
 const formSchema = z.object({
-  trackId: z.string(),
   taskName: z.string().min(2).max(50),
   taskDescription: z.string().min(2).max(300),
+  image: z.string(),
+  readMore: z.string().max(1000),
+  deadLine: z.string(),
 });
 
 const CreateTask = ({ trackId }: { trackId: string }) => {
@@ -35,17 +37,22 @@ const CreateTask = ({ trackId }: { trackId: string }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      trackId: trackId,
       taskName: "",
       taskDescription: "",
+      image: "",
+      readMore: "",
+      deadLine: "7",
     },
   });
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const { success, message } = await createTask({
-        trackId: values.trackId,
+        trackId,
         taskName: values.taskName,
         taskDescription: values.taskDescription,
+        image: values.image,
+        readMore: values.readMore,
+        deadLine: Number(values.deadLine),
       });
       toast({
         title: success ? "Success" : "Error",
@@ -97,6 +104,24 @@ const CreateTask = ({ trackId }: { trackId: string }) => {
                   <FormLabel>Task description</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter task description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="deadLine"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Task deadline</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      // defaultValue={7}
+                      placeholder="Enter number of days"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

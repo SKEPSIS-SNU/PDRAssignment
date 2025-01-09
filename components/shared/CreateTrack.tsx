@@ -25,29 +25,51 @@ import { Input } from "@/components/ui/input";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { createTrack } from "@/lib/actions/track.actions";
 import { useToast } from "@/hooks/use-toast";
+import { File_uploader } from "./File_uploader";
+import { ReactNode, useState } from "react";
+import { useUploadThing } from "@/lib/uploadthing";
 
 const formSchema = z.object({
   trackName: z.string().min(2).max(50),
   trackDescription: z.string().min(2).max(300),
-  label: z.string().min(2).max(50),
+  trackBanner: z.string(),
 });
 
-const CreateTrack = () => {
+const CreateTrack = ({ trigger }: { trigger: ReactNode }) => {
   const { toast } = useToast();
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [proceessing, setProceessing] = useState(false);
+  const { startUpload } = useUploadThing("imageUploader");
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      label: "",
       trackName: "",
       trackDescription: "",
+      trackBanner: "",
     },
   });
 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      if (files.length > 0) {
+        setIsUploading(true);
+        setProceessing(true);
+        const uploadedImages = await startUpload(files);
+
+        if (!uploadedImages) {
+          setIsUploading(false);
+          return;
+        }
+
+        values.trackBanner = uploadedImages[0].url;
+        setIsUploading(false);
+      }
+
       const { success, message } = await createTrack({
-        label: values.label,
+        trackBanner: values.trackBanner,
         trackName: values.trackName,
         trackDescription: values.trackDescription,
       });
@@ -64,15 +86,14 @@ const CreateTrack = () => {
         description: error.message || "Something went wrong",
       });
     } finally {
+      setProceessing(false);
       form.reset();
     }
   }
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button>Create track</Button>
-      </DialogTrigger>
-      <DialogContent>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Create track</DialogTitle>
           <DialogDescription>
@@ -81,53 +102,76 @@ const CreateTrack = () => {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="trackName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Track name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter track name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="trackDescription"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Track description</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter track description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="label"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Track label</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: webDev" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    This is the track label which will be used in routes.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogClose asChild>
-              <Button className="w-full" type="submit">
-                Submit
-              </Button>
-            </DialogClose>
+            <div className="flex flex-col gap-4 lg:gap-6 lg:grid lg:grid-cols-2 lg:mt-6">
+              <FormField
+                control={form.control}
+                name="trackBanner"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl className="h-72">
+                      <File_uploader
+                        onFieldChange={field.onChange}
+                        imageUrl={field.value || ""}
+                        setFiles={setFiles}
+                        disabled={isUploading || form.formState.isSubmitting} // Disable while uploading
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex flex-col gap-4 lg:gap-6">
+                <FormField
+                  control={form.control}
+                  name="trackName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Track name</FormLabel>
+                      <FormControl>
+                        <Input
+                          required
+                          className="py-6 px-4 rounded-full"
+                          placeholder="Enter track name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="trackDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Track description</FormLabel>
+                      <FormControl>
+                        <Input
+                          required
+                          className="py-6 px-4 rounded-full"
+                          placeholder="Enter track description"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* <DialogClose asChild> */}
+                <Button
+                  className="w-full py-6 rounded-full lg:mt-4"
+                  type="submit"
+                  disabled={proceessing || !form.formState.isDirty}
+                >
+                  {isUploading ? (
+                    <span>Uploading...</span>
+                  ) : (
+                    <span>{proceessing ? "Creating..." : "Create track"}</span>
+                  )}
+                </Button>
+                {/* </DialogClose> */}
+              </div>
+            </div>
           </form>
         </Form>
       </DialogContent>

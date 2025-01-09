@@ -1,87 +1,78 @@
 import CreateTrack from "@/components/shared/CreateTrack";
 import ErrorDiv from "@/components/shared/ErrorDiv";
 import JoinTrack from "@/components/shared/JoinTrack";
-import Logo from "@/components/shared/Logo";
+import MotionDiv from "@/components/shared/Motion_div";
+import WaveAnimation from "@/components/shared/Wave";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  createAdmin,
-  handleCreateUserAndReturnData,
-} from "@/lib/actions/user.actions";
-import { userInfo } from "@/lib/actions/userInfo.action";
+import { handleCreateUserAndReturnData } from "@/lib/actions/user.actions";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
 async function HandleUser() {
-  const { userId, userName, userMail, firstName, lastName, userImage } =
-    await userInfo();
-
-  if (!userId || !userName || !userMail) {
-    return <ErrorDiv errorMessage="Recived incomplete user info" />;
-  }
-
   const { success, message, isAdmin, tracks } =
-    await handleCreateUserAndReturnData({
-      userId,
-      userName,
-      userMail,
-      firstName,
-      lastName,
-      userImage,
-    });
-
-  // await createAdmin({
-  //   clerk_id: userId,
-  //   email: userMail,
-  //   username: userName,
-  // });
-  // console.log(tracks);
+    await handleCreateUserAndReturnData();
   return (
     <>
       {success ? (
         <>
-          <header className="w-full py-4 flex justify-between items-center">
-            <Logo />
-            {isAdmin ? <CreateTrack /> : <JoinTrack />}
-          </header>
-          <main>
-            <section className="w-full aspect-video rounded-xl max-h-96 bg-accent min-h-64"></section>
-            {tracks.length > 0 ? (
-              <>
-                <h2 className="text-xl font-semibold text-muted-foreground my-4">
-                  {isAdmin ? "All tracks" : "Your tracks"}
-                </h2>
-                <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                  {tracks.map((track: any) => (
-                    <div
-                      key={track._id}
-                      className="bg-accent/50 hover:bg-accent/80 transition-colors border border-transparent hover:border-border p-6 rounded-xl min-h-48 flex flex-col justify-between"
-                    >
-                      <div>
-                        <h2 className="text-lg font-semibold">
-                          {track.trackName}
-                        </h2>
-                        <p className="text-muted-foreground">
-                          {track.trackDescription}
-                        </p>
-                      </div>
-
-                      <div className="w-full flex justify-end">
-                        <Button asChild>
-                          <Link href={`/${track._id}`}>Visit track</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </section>
-              </>
+          <div className="flex w-full justify-between gap-8 flex-wrap my-4 items-center">
+            <h2 className="text-xl font-semibold text-muted-foreground my-4">
+              {isAdmin ? "All tracks" : "Your tracks"}
+            </h2>
+            {isAdmin ? (
+              <CreateTrack
+                trigger={<Button className="rounded-full">Create track</Button>}
+              />
             ) : (
-              <div>
-                <p className="text-muted-foreground mt-4">No tracks to show</p>
-              </div>
+              <JoinTrack
+                trigger={<Button className="rounded-full">Join track</Button>}
+              />
             )}
-          </main>
+          </div>
+          {tracks.length > 0 ? (
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4 min-h-screen items-start">
+              {tracks.map((track: any) => (
+                <Link
+                  href={`/${track._id}`}
+                  key={track._id}
+                  className="flex flex-col gap-2 border rounded-xl hover:bg-accent/30 transition-all card_hover p-4"
+                >
+                  <div className="w-full aspect-video overflow-hidden rounded-lg relative">
+                    <Skeleton className="w-full h-full absolute z-[-1] bg-primary/50" />
+                    <Image
+                      src={track.banner}
+                      width={300}
+                      height={300}
+                      alt="track_banner"
+                      className="w-full select-none rounded-lg transition-transform duration-300 img"
+                      priority={true}
+                      draggable={false}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-6 mt-4">
+                    <div>
+                      <h3 className="text-2xl font-semibold">
+                        {track.track_name}
+                      </h3>
+                      <p className="text-muted-foreground text-lg tracking-wide mt-1">
+                        {track.track_description}
+                      </p>
+                    </div>
+                    <Button className="w-full py-5 rounded-full">
+                      Visit track
+                    </Button>
+                  </div>
+                </Link>
+              ))}
+            </section>
+          ) : (
+            <div className="py-4 mb-10">
+              <p className="text-muted-foreground mt-4">No tracks to show</p>
+            </div>
+          )}
         </>
       ) : (
         <ErrorDiv errorMessage={message} />
@@ -94,23 +85,39 @@ export default function Home() {
   return (
     <>
       <SignedIn>
-        <Suspense
-          fallback={
-            <>
-              <Skeleton className="w-full h-10 my-4" />
-              <Skeleton className="w-full aspect-video rounded-xl max-h-96 min-h-64"></Skeleton>
-              <Skeleton className="w-72 h-8 my-4"></Skeleton>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Skeleton className="w-full h-48 rounded-xl" />
-                <Skeleton className="w-full h-48 rounded-xl" />
-                <Skeleton className="w-full h-48 rounded-xl" />
+        <main>
+          <section className="w-full min-h-[60vh] flex flex-col gap-10 justify-between items-center md:flex-row lg:gap-16 py-8 md:py-0">
+            <div className="flex flex-col items-center text-center md:items-start md:text-left md:-translate-y-[15%]">
+              <p className="text-primary text-5xl font-semibold">Learn with</p>
+              <div className="relative w-fit">
+                <p className="text-7xl font-bold mt-2">SKEPSIS</p>
+                <WaveAnimation className="absolute bottom-0 translate-y-[45%]" />
               </div>
-            </>
-          }
-        >
-          <HandleUser />
-        </Suspense>
+
+              <p className="text-lg text-muted-foreground tracking-wide mt-5 px-10 md:px-0 md:max-w-[600px]">
+                Discover tracks tailored to your interests, offering insights
+                into real-world projects, practical skills, and valuable
+                experiences to help you grow and succeed.
+              </p>
+            </div>
+
+            <div className="w-[60%] md:w-[40%] max-w-[450px] aspect-square bg-accent dark:bg-accent/50 rounded-2xl flex-shrink-0"></div>
+          </section>
+          <Suspense
+            fallback={
+              <>
+                <Skeleton className="w-full h-10 my-7" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Skeleton className="w-full h-72 rounded-xl" />
+                  <Skeleton className="w-full h-72 rounded-xl" />
+                  <Skeleton className="w-full h-72 rounded-xl" />
+                </div>
+              </>
+            }
+          >
+            <HandleUser />
+          </Suspense>
+        </main>
       </SignedIn>
 
       <SignedOut>
