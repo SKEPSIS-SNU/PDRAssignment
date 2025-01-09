@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import React from "react";
+import React, { Suspense } from "react";
 import { Skeleton } from "../ui/skeleton";
 import { Chart } from "./Chart";
 
@@ -28,10 +28,11 @@ const Intro = ({
             width={400}
             height={400}
             alt="banner"
-            className="w-full h-full object-cover"
-            priority={true}
+            className="w-full h-full object-cover relative z-10"
+            loading="lazy"
           />
-          <Skeleton className="w-full h-full absolute bg-primary/50 z-[-1]" />
+
+          <Skeleton className="w-full h-full absolute bg-primary/50" />
         </div>
       )}
       <div className="relative w-full md:w-1/2">

@@ -41,7 +41,7 @@ async function HandleUser() {
                   className="flex flex-col gap-2 border rounded-xl hover:bg-accent/30 transition-all card_hover p-4"
                 >
                   <div className="w-full aspect-video overflow-hidden rounded-lg relative">
-                    <Skeleton className="w-full h-full absolute z-[-1] bg-primary/50" />
+                    <Skeleton className="w-full h-full absolute z-[-1] bg-accent/50" />
                     <Image
                       src={track.banner}
                       width={300}
