@@ -24,11 +24,11 @@ async function HandleUser() {
             </h2>
             {isAdmin ? (
               <CreateTrack
-                trigger={<Button className="rounded-full">Create track</Button>}
+                trigger={<Button className="py-6">Create track</Button>}
               />
             ) : (
               <JoinTrack
-                trigger={<Button className="rounded-full">Join track</Button>}
+                trigger={<Button className="py-6">Join track</Button>}
               />
             )}
           </div>
@@ -172,7 +172,9 @@ export default function Home() {
             </div>
 
             <SignInButton>
-              <Button variant={"secondary"} className="w-full mt-2">Sign In</Button>
+              <Button variant={"secondary"} className="w-full mt-2">
+                Sign In
+              </Button>
             </SignInButton>
           </div>
 

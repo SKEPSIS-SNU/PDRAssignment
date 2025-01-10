@@ -19,7 +19,12 @@ async function CheckAccessAndRenderUsers({ trackId }: { trackId: string }) {
           banner={track.banner}
         />
         <h2 className="text-xl mt-6 font-bold">Users</h2>
-        <Users users={trackUsers} trackId={trackId} />
+
+        {trackUsers.length > 0 ? (
+          <Users users={trackUsers} trackId={trackId} />
+        ) : (
+          <p className="mt-6 text-muted-foreground">No users to show</p>
+        )}
       </main>
     );
   } else {

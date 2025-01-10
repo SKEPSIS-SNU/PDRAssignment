@@ -28,14 +28,12 @@ const SignOut = () => {
         <DialogFooter>
           <SignOutButton>
             <DialogClose asChild>
-              <Button variant="secondary" className="py-5">
-                Sign out
-              </Button>
+              <Button variant="secondary">Sign out</Button>
             </DialogClose>
           </SignOutButton>
 
           <DialogClose asChild>
-            <Button className="py-5">Cancel</Button>
+            <Button>Cancel</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

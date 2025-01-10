@@ -44,7 +44,7 @@ const TaskCard = ({
           </p>
         </div>
         {isAdmin ? (
-          <Button className="py-5">View task</Button>
+          <Button>View task</Button>
         ) : (
           <>
             {task.note && <p>{task.note}</p>}
@@ -53,15 +53,15 @@ const TaskCard = ({
             )}
             {task.status === "in-progress" && (
               //   <TaskSubmitionForm trackId={track_id} taskId={task._id} />
-              <Button className="py-5">View task</Button>
+              <Button>View task</Button>
             )}
             {task.status === "review" && (
-              <Button disabled variant={"secondary"} className="py-5">
+              <Button disabled variant={"secondary"}>
                 Under Review
               </Button>
             )}
             {task.status === "completed" && (
-              <Button className="bg-green-600 hover:bg-green-700 py-5" disabled>
+              <Button className="bg-green-600 hover:bg-green-700" disabled>
                 Completed
               </Button>
             )}

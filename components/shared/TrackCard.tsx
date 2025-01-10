@@ -35,7 +35,7 @@ const TrackCard = ({ track }: { track: any }) => {
             {track.track_description}
           </p>
         </div>
-        <Button className="w-full py-5">Visit track</Button>
+        <Button className="w-full">Visit track</Button>
       </div>
     </Link>
   );

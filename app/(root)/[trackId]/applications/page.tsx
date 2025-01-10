@@ -17,10 +17,12 @@ async function CheckUserAccessAndRender({ trackId }: { trackId: string }) {
           isAdmin={true}
           banner={track.banner}
         />
-        <h2 className="text-xl font-bold text-muted-foreground">
-          Applications
-        </h2>
-        <Applications applicants={applicants} trackId={trackId} />
+        <h2 className="text-xl mt-6 font-bold">Applications</h2>
+        {applicants.length > 0 ? (
+          <Applications applicants={applicants} trackId={trackId} />
+        ) : (
+          <p className="mt-6 text-muted-foreground">No applications yet</p>
+        )}
       </main>
     );
   } else {

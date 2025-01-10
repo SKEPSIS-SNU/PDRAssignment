@@ -51,7 +51,7 @@ const DeleteTask = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="py-5" variant={"outline"}>
+        <Button variant={"outline"}>
           {loading ? <span>Deleting...</span> : <span>Delete task</span>}
         </Button>
       </DialogTrigger>
@@ -67,13 +67,12 @@ const DeleteTask = ({
             <Button
               onClick={() => onDelete(taskId, trackId)}
               variant={"outline"}
-              className="py-5"
             >
               Delete
             </Button>
           </DialogClose>
           <DialogClose asChild>
-            <Button className="py-5">Cancel</Button>
+            <Button>Cancel</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

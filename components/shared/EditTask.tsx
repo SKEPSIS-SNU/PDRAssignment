@@ -107,7 +107,7 @@ const EditTask = ({ trackId, task }: { trackId: string; task: Task }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="py-5">Edit task</Button>
+        <Button>Edit task</Button>
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>

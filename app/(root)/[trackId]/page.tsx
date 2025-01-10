@@ -2,7 +2,6 @@ import CreateTask from "@/components/shared/CreateTask";
 import ErrorDiv from "@/components/shared/ErrorDiv";
 import Intro from "@/components/shared/Intro";
 import TaskCard from "@/components/shared/TaskCard";
-import TaskSubmitionForm from "@/components/shared/TaskSubmitionForm";
 import { Button } from "@/components/ui/button";
 import { checkAndGetTrack } from "@/lib/actions/track.actions";
 import { Loader2 } from "lucide-react";
@@ -32,11 +31,15 @@ async function CheckUserAccessAndRenderTrack({ trackId }: { trackId: string }) {
                   </h2>
 
                   {isAdmin && (
-                    <div className="flex flex-col gap-4 md:flex-row">
+                    <div className="flex flex-col gap-2 md:flex-row">
                       <Button asChild variant={"outline"}>
                         <Link href={`/${track._id}/applications`}>
                           Applications
                         </Link>
+                      </Button>
+
+                      <Button asChild variant={"outline"}>
+                        <Link href={`/${track._id}/users`}>Users</Link>
                       </Button>
 
                       <CreateTask trackId={track._id} />

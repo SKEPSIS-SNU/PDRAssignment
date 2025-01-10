@@ -90,7 +90,7 @@ export function File_uploader({
           )}
         </div>
       ) : (
-        <div className="flex flex-col justify-center items-center py-5">
+        <div className="flex flex-col justify-center items-center">
           <ImageUp className="w-16 h-16 text-muted-foreground" />
           <p className="mb-2 mt-2 text-sm text-primary">
             Drag photo here or click to select

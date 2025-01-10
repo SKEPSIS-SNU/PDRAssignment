@@ -25,7 +25,7 @@ const Users = ({ users, trackId }: { users: any[]; trackId: string }) => {
           type="text"
           placeholder="Search by name or email"
           value={searchTerm}
-          className="py-5 pr-5 pl-9 rounded-full"
+          className="pr-5 pl-9 rounded-full"
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>

@@ -157,7 +157,7 @@ const CreateTrack = ({ trigger }: { trigger: ReactNode }) => {
                 />
                 {/* <DialogClose asChild> */}
                 <Button
-                  className="w-full rounded-full lg:mt-4"
+                  className="w-full py-6 lg:mt-4"
                   type="submit"
                   disabled={proceessing || !form.formState.isDirty}
                 >

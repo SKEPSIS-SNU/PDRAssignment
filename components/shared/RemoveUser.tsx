@@ -47,7 +47,7 @@ const RemoveUser = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="py-5" variant={"secondary"}>
+        <Button variant={"secondary"}>
           {loading ? <span>Removing...</span> : <span>Remove</span>}
         </Button>
       </DialogTrigger>
@@ -61,16 +61,12 @@ const RemoveUser = ({
         </DialogHeader>
         <DialogFooter className="gap-2">
           <DialogClose asChild>
-            <Button
-              className="py-5"
-              onClick={() => onRemove(userId, trackId)}
-              variant="outline"
-            >
+            <Button onClick={() => onRemove(userId, trackId)} variant="outline">
               Remove
             </Button>
           </DialogClose>
           <DialogClose asChild>
-            <Button className="py-5">Cancel</Button>
+            <Button>Cancel</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>
