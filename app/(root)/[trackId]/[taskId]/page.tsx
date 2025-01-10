@@ -10,6 +10,8 @@ import { Suspense } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import TaskLink from "@/components/shared/TaskLink";
 import AccRejSub from "@/components/shared/AccRejSub";
+import EditTask from "@/components/shared/EditTask";
+import DeleteTask from "@/components/shared/DeleteTask";
 
 async function CheckAccessAndRenderTask({
   trackId,
@@ -59,66 +61,72 @@ async function CheckAccessAndRenderTask({
           </div>
         </section>
         {isAdmin ? (
-          <section className="pb-6">
-            <h2 className="text-lg tracking-wider mb-4">Submissions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              {submissions.length > 0 ? (
-                <>
-                  {submissions.map((submission: any) => (
-                    <div
-                      key={submission.taskId}
-                      className="p-6 flex flex-col gap-6 border rounded-2xl "
-                    >
-                      <div className="flex gap-4 items-start flex-row flex-wrap">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={submission.user_id.photo} />
-                          <AvatarFallback>
-                            <Skeleton className="h-full w-full rounded-full bg-primary/50 animate-pulse" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold text-lg">
-                            {submission.user_id.first_name}{" "}
-                            {submission.user_id.last_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {submission.user_id.email}
-                          </p>
+          <>
+            <section className="flex gap-2 flex-row flex-wrap justify-end">
+              <DeleteTask taskId={task._id} trackId={trackId} />
+              <EditTask task={task} trackId={trackId} />
+            </section>
+            <section className="pb-6">
+              <h2 className="text-lg tracking-wider mb-4">Submissions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                {submissions.length > 0 ? (
+                  <>
+                    {submissions.map((submission: any) => (
+                      <div
+                        key={submission.taskId}
+                        className="p-6 flex flex-col gap-6 border rounded-2xl "
+                      >
+                        <div className="flex gap-4 items-start flex-row flex-wrap">
+                          <Avatar className="w-12 h-12">
+                            <AvatarImage src={submission.user_id.photo} />
+                            <AvatarFallback>
+                              <Skeleton className="h-full w-full rounded-full bg-primary/50 animate-pulse" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-lg">
+                              {submission.user_id.first_name}{" "}
+                              {submission.user_id.last_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {submission.user_id.email}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {submission.github_link && (
+                            <TaskLink
+                              linkType="Github"
+                              link={submission.github_link}
+                            />
+                          )}
+
+                          {submission.kaggle_link && (
+                            <TaskLink
+                              linkType="Kaggel"
+                              link={submission.kaggle_link}
+                            />
+                          )}
+
+                          {submission.website_link && (
+                            <TaskLink
+                              linkType="Website"
+                              link={submission.website_link}
+                            />
+                          )}
+                        </div>
+                        <div className="flex flex-row flex-wrap gap-2 justify-end">
+                          <AccRejSub submissionId={submission.submission_id} />
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        {submission.github_link && (
-                          <TaskLink
-                            linkType="Github"
-                            link={submission.github_link}
-                          />
-                        )}
-
-                        {submission.kaggle_link && (
-                          <TaskLink
-                            linkType="Kaggel"
-                            link={submission.kaggle_link}
-                          />
-                        )}
-
-                        {submission.website_link && (
-                          <TaskLink
-                            linkType="Website"
-                            link={submission.website_link}
-                          />
-                        )}
-                      </div>
-                      <div className="flex flex-row flex-wrap gap-2 justify-end">
-                        <AccRejSub submissionId={submission.submission_id} />
-                      </div>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <p className="text-muted-foreground">No submissions yet</p>
-              )}
-            </div>
-          </section>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">No submissions yet</p>
+                )}
+              </div>
+            </section>
+          </>
         ) : (
           <section className="pb-6">
             {assignment.status === "review" && (

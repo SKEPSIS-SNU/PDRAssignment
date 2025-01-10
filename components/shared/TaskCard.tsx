@@ -44,13 +44,7 @@ const TaskCard = ({
           </p>
         </div>
         {isAdmin ? (
-          <>
-            <Button asChild className="py-5">
-              <Link href={`/${track_id}/${task._id}/submissions`}>
-                Submissions
-              </Link>
-            </Button>
-          </>
+          <Button className="py-5">View task</Button>
         ) : (
           <>
             {task.note && <p>{task.note}</p>}

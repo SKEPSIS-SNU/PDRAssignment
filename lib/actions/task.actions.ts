@@ -11,6 +11,7 @@ import User from "../database/models/user.model";
 import Submission from "../database/models/submissions.model";
 import Membership from "../database/models/membership.model";
 import Assignment from "../database/models/assignment.model";
+import { UTApi } from "uploadthing/server";
 
 type createTaskProps = {
   trackId: string;
@@ -84,6 +85,7 @@ export async function createTask({
       const assignments = members.map((member) => ({
         user_id: member.user_id,
         task_id: task._id,
+        track_id: trackId,
       }));
 
       const createdAssignments = await Assignment.insertMany(assignments);
@@ -103,6 +105,163 @@ export async function createTask({
     return {
       success: true,
       message: "Task created and assignments generated successfully",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || "Something went wrong",
+    };
+  }
+}
+type updateTaskProps = {
+  taskId: string;
+  trackId: string;
+  taskName: string;
+  taskDescription: string;
+  readMore: string;
+  image: string;
+  additionalDays: number;
+};
+export async function updateTask({
+  taskId,
+  trackId,
+  taskName,
+  taskDescription,
+  readMore,
+  image,
+  additionalDays,
+}: updateTaskProps) {
+  if (
+    !mongoose.Types.ObjectId.isValid(taskId) ||
+    !mongoose.Types.ObjectId.isValid(trackId)
+  ) {
+    return {
+      success: false,
+      message: "Invalid taskId or trackId",
+    };
+  }
+  try {
+    const { clerk_id, user_email } = await userInfo();
+
+    if (!clerk_id || !user_email) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+
+    await connectToDatabase();
+
+    const admin = await Admin.findOne({ clerk_id, email: user_email });
+
+    if (!admin) {
+      return {
+        success: false,
+        message: "You are not an admin",
+      };
+    }
+
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return {
+        success: false,
+        message: "Task not found",
+      };
+    }
+
+    task.task_name = taskName;
+    task.task_description = taskDescription;
+    task.read_more = readMore;
+    task.dead_line += additionalDays;
+
+    if (task.image === "") {
+      task.image = image;
+    } else {
+      let oldImageKey = task.image.split("/").pop();
+      try {
+        const utapi = new UTApi();
+        await utapi.deleteFiles(oldImageKey);
+      } catch (error: any) {
+        return {
+          success: false,
+          message: "Failed to delete old image: " + error.message,
+        };
+      }
+      task.image = image;
+    }
+
+    const updatedTask = await task.save();
+
+    if (!updatedTask) {
+      return {
+        success: false,
+        message: "Task not updated",
+      };
+    }
+
+    // Revalidate paths
+    revalidatePath(`/${trackId}`);
+
+    return {
+      success: true,
+      message: "Task updated successfully",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || "Something went wrong",
+    };
+  }
+}
+
+export async function deleteTask(taskId: string, trackId: string) {
+  if (
+    !mongoose.Types.ObjectId.isValid(taskId) ||
+    !mongoose.Types.ObjectId.isValid(trackId)
+  ) {
+    return {
+      success: false,
+      message: "Invalid taskId or trackId",
+    };
+  }
+  try {
+    const { clerk_id, user_email } = await userInfo();
+
+    if (!clerk_id || !user_email) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+
+    await connectToDatabase();
+
+    const admin = await Admin.findOne({ clerk_id, email: user_email });
+
+    if (!admin) {
+      return {
+        success: false,
+        message: "You dont have permission to delete task",
+      };
+    }
+
+    const task = await Task.findByIdAndDelete(taskId);
+    if (!task) {
+      return {
+        success: false,
+        message: "Task not found",
+      };
+    }
+
+    await Assignment.deleteMany({ task_id: taskId });
+    await Submission.deleteMany({ task_id: taskId });
+
+    // Revalidate paths
+    revalidatePath(`/${trackId}`);
+
+    return {
+      success: true,
+      message: "Task deleted successfully",
     };
   } catch (error: any) {
     return {

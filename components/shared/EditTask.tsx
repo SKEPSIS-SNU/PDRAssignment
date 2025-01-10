@@ -21,21 +21,22 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { createTask } from "@/lib/actions/task.actions";
+import { updateTask } from "@/lib/actions/task.actions";
 import { File_uploader } from "./File_uploader";
 import { useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { useUploadThing } from "@/lib/uploadthing";
+import { Task } from "@/lib/database/models/task.model";
 
 const formSchema = z.object({
   taskName: z.string().min(2).max(50),
   taskDescription: z.string().min(2).max(300),
   image: z.string(),
   readMore: z.string().max(1000),
-  deadLine: z.string(),
+  additionalDays: z.string(),
 });
 
-const CreateTask = ({ trackId }: { trackId: string }) => {
+const EditTask = ({ trackId, task }: { trackId: string; task: Task }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [proceessing, setProceessing] = useState(false);
@@ -45,11 +46,11 @@ const CreateTask = ({ trackId }: { trackId: string }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      taskName: "",
-      taskDescription: "",
-      image: "",
-      readMore: "",
-      deadLine: "7",
+      taskName: task.task_name,
+      taskDescription: task.task_description,
+      image: task.image,
+      readMore: task.read_more,
+      additionalDays: "0",
     },
   });
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -68,14 +69,26 @@ const CreateTask = ({ trackId }: { trackId: string }) => {
         setIsUploading(false);
       }
 
-      const { success, message } = await createTask({
+      const { success, message } = await updateTask({
+        taskId: task._id,
         trackId,
         taskName: values.taskName,
         taskDescription: values.taskDescription,
         image: values.image,
         readMore: values.readMore,
-        deadLine: Number(values.deadLine),
+        additionalDays: Number(values.additionalDays),
       });
+
+      if (success) {
+        form.reset({
+          taskName: values.taskName,
+          taskDescription: values.taskDescription,
+          image: values.image,
+          readMore: values.readMore,
+          additionalDays: values.additionalDays.toString(),
+        });
+      }
+
       toast({
         title: success ? "Success" : "Error",
         variant: success ? "default" : "destructive",
@@ -89,19 +102,18 @@ const CreateTask = ({ trackId }: { trackId: string }) => {
       });
     } finally {
       setProceessing(false);
-      form.reset();
     }
   }
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Create task</Button>
+        <Button className="py-5">Edit task</Button>
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create task</DialogTitle>
+          <DialogTitle>Edit task</DialogTitle>
           <DialogDescription>
-            Give a task name and description.
+            Make necessary changes and update.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -180,15 +192,15 @@ const CreateTask = ({ trackId }: { trackId: string }) => {
                 />
                 <FormField
                   control={form.control}
-                  name="deadLine"
+                  name="additionalDays"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Task deadline</FormLabel>
+                      <FormLabel>Additional days</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           // defaultValue={7}
-                          placeholder="Enter number of days"
+                          placeholder="Enter number of additional days"
                           {...field}
                         />
                       </FormControl>
@@ -204,7 +216,7 @@ const CreateTask = ({ trackId }: { trackId: string }) => {
                   {isUploading ? (
                     <span>Uploading...</span>
                   ) : (
-                    <span>{proceessing ? "Creating..." : "Create task"}</span>
+                    <span>{proceessing ? "Updating..." : "Update task"}</span>
                   )}
                 </Button>
               </div>
@@ -216,4 +228,4 @@ const CreateTask = ({ trackId }: { trackId: string }) => {
   );
 };
 
-export default CreateTask;
+export default EditTask;

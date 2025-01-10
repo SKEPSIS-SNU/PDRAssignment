@@ -4,6 +4,7 @@ export interface IAssignment extends Document {
   _id: string;
   user_id: string;
   task_id: string;
+  track_id: string;
   status: string;
   note: string;
   error_note: string;
@@ -14,6 +15,7 @@ export interface IAssignment extends Document {
 const AssignmentSchema = new Schema({
   user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
   task_id: { type: Schema.Types.ObjectId, ref: "Task", required: true },
+  track_id: { type: Schema.Types.ObjectId, ref: "Track", required: true },
   status: {
     type: String,
     enum: ["in-progress", "review", "completed", "expired"],
