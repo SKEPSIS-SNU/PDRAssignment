@@ -74,6 +74,7 @@ export function File_uploader({
             alt="Selected"
             width={250}
             height={250}
+            quality={70}
             className="w-full"
           />
           {!disabled && ( // Only show the button if not disabled

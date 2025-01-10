@@ -20,6 +20,7 @@ const TrackCard = ({ track }: { track: any }) => {
             alt="track_banner"
             className="w-full select-none rounded-lg transition-transform duration-300 img"
             priority={true}
+            quality={60}
             draggable={false}
           />
         ) : (

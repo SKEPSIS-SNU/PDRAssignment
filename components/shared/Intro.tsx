@@ -25,8 +25,9 @@ const Intro = ({
         <div className="w-full md:w-1/2 aspect-video overflow-hidden rounded-lg relative">
           <Image
             src={banner}
-            width={400}
-            height={400}
+            width={300}
+            height={300}
+            quality={75}
             alt="banner"
             className="w-full h-full object-cover relative z-10"
             priority={true}

@@ -26,6 +26,7 @@ const TaskCard = ({
             width={300}
             height={300}
             alt="task_image"
+            quality={60}
             className="w-full select-none rounded-lg transition-transform duration-300 img"
             priority={true}
             draggable={false}
