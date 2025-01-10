@@ -102,7 +102,7 @@ const CreateTrack = ({ trigger }: { trigger: ReactNode }) => {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex flex-col gap-4 lg:gap-6 lg:grid lg:grid-cols-2 lg:mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
               <FormField
                 control={form.control}
                 name="trackBanner"
@@ -120,7 +120,7 @@ const CreateTrack = ({ trigger }: { trigger: ReactNode }) => {
                   </FormItem>
                 )}
               />
-              <div className="flex flex-col gap-4 lg:gap-6">
+              <div className="flex flex-col h-full justify-between gap-4 lg:gap-6">
                 <FormField
                   control={form.control}
                   name="trackName"
@@ -130,7 +130,6 @@ const CreateTrack = ({ trigger }: { trigger: ReactNode }) => {
                       <FormControl>
                         <Input
                           required
-                          className="py-6 px-4 rounded-full"
                           placeholder="Enter track name"
                           {...field}
                         />
@@ -148,7 +147,6 @@ const CreateTrack = ({ trigger }: { trigger: ReactNode }) => {
                       <FormControl>
                         <Input
                           required
-                          className="py-6 px-4 rounded-full"
                           placeholder="Enter track description"
                           {...field}
                         />
@@ -159,7 +157,7 @@ const CreateTrack = ({ trigger }: { trigger: ReactNode }) => {
                 />
                 {/* <DialogClose asChild> */}
                 <Button
-                  className="w-full py-6 rounded-full lg:mt-4"
+                  className="w-full rounded-full lg:mt-4"
                   type="submit"
                   disabled={proceessing || !form.formState.isDirty}
                 >

@@ -212,6 +212,102 @@ export async function makeTrackApplicationAndReturnNewData(trackId: string) {
   }
 }
 
+// export async function checkAndGetTrack(trackId: string) {
+//   if (!mongoose.Types.ObjectId.isValid(trackId)) {
+//     return {
+//       success: false,
+//       message: "Invalid track ID",
+//     };
+//   }
+
+//   try {
+//     const { clerk_id, user_email } = await userInfo();
+
+//     if (!clerk_id || !user_email) {
+//       return {
+//         success: false,
+//         message: "Received incomplete user info",
+//       };
+//     }
+
+//     await connectToDatabase();
+
+//     // Check if the user is an admin
+//     const isAdmin = await Admin.findOne({ clerk_id, email: user_email });
+
+//     const track = await Track.findById(trackId);
+//     if (!track) {
+//       return {
+//         success: false,
+//         message: "Track not found",
+//       };
+//     }
+
+//     let tasks = [];
+//     if (isAdmin) {
+//       tasks = await Task.find({ track_id: track._id });
+//     } else {
+//       const user = await User.findOne({ clerk_id, email: user_email });
+
+//       if (!user) {
+//         return {
+//           success: false,
+//           message: "User not found",
+//         };
+//       }
+
+//       const membership = await Membership.findOne({
+//         user_id: user._id,
+//         track_id: trackId,
+//       });
+
+//       if (!membership) {
+//         return {
+//           success: false,
+//           message: "You are not a member of this track",
+//         };
+//       }
+
+//       // Fetch all tasks in the track
+//       const trackTasks = await Task.find({ track_id: track._id }).select(
+//         "_id task_name task_description image read_more dead_line currentDate"
+//       );
+
+//       // Fetch assignments for the user
+//       const assignments = await Assignment.find({
+//         user_id: user._id,
+//         task_id: { $in: trackTasks.map((task) => task._id) },
+//       });
+
+//       // Map assignments to tasks
+//       tasks = trackTasks.map((task) => {
+//         const assignment = assignments.find(
+//           (a) => a.task_id.toString() === task._id.toString()
+//         );
+//         return {
+//           ...task.toObject(),
+//           status: assignment.status,
+//           note: assignment.note,
+//           error_note: assignment.error_note,
+//           is_edited: assignment.is_edited,
+//           submission_id: assignment.submission_id,
+//         };
+//       });
+//     }
+
+//     return {
+//       success: true,
+//       isAdmin: !!isAdmin,
+//       track: JSON.parse(JSON.stringify(track)),
+//       tasks: JSON.parse(JSON.stringify(tasks)),
+//     };
+//   } catch (error: any) {
+//     return {
+//       success: false,
+//       message: error.message || "Something went wrong",
+//     };
+//   }
+// }
 export async function checkAndGetTrack(trackId: string) {
   if (!mongoose.Types.ObjectId.isValid(trackId)) {
     return {
@@ -245,7 +341,8 @@ export async function checkAndGetTrack(trackId: string) {
 
     let tasks = [];
     if (isAdmin) {
-      tasks = await Task.find({ track_id: track._id });
+      // Fetch all tasks and sort in reverse order by creation date
+      tasks = await Task.find({ track_id: track._id }).sort({ createdAt: -1 });
     } else {
       const user = await User.findOne({ clerk_id, email: user_email });
 
@@ -268,10 +365,12 @@ export async function checkAndGetTrack(trackId: string) {
         };
       }
 
-      // Fetch all tasks in the track
-      const trackTasks = await Task.find({ track_id: track._id }).select(
-        "_id task_name task_description image read_more dead_line currentDate"
-      );
+      // Fetch all tasks in the track and sort in reverse order by creation date
+      const trackTasks = await Task.find({ track_id: track._id })
+        .sort({ createdAt: -1 }) // Sorting tasks by `createdAt` in descending order
+        .select(
+          "_id task_name task_description image read_more dead_line currentDate"
+        );
 
       // Fetch assignments for the user
       const assignments = await Assignment.find({
@@ -286,11 +385,11 @@ export async function checkAndGetTrack(trackId: string) {
         );
         return {
           ...task.toObject(),
-          status: assignment.status,
-          note: assignment.note,
-          error_note: assignment.error_note,
-          is_edited: assignment.is_edited,
-          submission_id: assignment.submission_id,
+          status: assignment?.status,
+          note: assignment?.note,
+          error_note: assignment?.error_note,
+          is_edited: assignment?.is_edited,
+          submission_id: assignment?.submission_id,
         };
       });
     }

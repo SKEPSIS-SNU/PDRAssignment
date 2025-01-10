@@ -19,7 +19,7 @@ const TaskLink = ({ linkType, link }: { linkType: string; link: string }) => {
   };
 
   return (
-    <div className="bg-background p-4 rounded-xl flex items-center justify-between">
+    <div className="bg-accent dark:bg-accent/50 p-4 rounded-xl flex items-center justify-between">
       <div>
         <p>{linkType}</p>
         <p className="text-muted-foreground">{link}</p>

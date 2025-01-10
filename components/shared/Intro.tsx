@@ -29,7 +29,7 @@ const Intro = ({
             height={400}
             alt="banner"
             className="w-full h-full object-cover relative z-10"
-            loading="lazy"
+            priority={true}
           />
 
           <Skeleton className="w-full h-full absolute bg-primary/50" />
@@ -37,7 +37,7 @@ const Intro = ({
       )}
       <div className="relative w-full md:w-1/2">
         {!isAdmin && (
-          <div className="w-[45vw] max-w-[200px] aspect-square bg-background rounded-tl-3xl absolute top-0 right-0 -translate-y-[90%] md:static md:rounded-xl md:translate-y-0 md:border">
+          <div className="w-[45vw] max-w-[200px] aspect-square bg-background rounded-tl-3xl absolute top-0 right-0 -translate-y-[90%] md:static md:rounded-xl md:translate-y-0 md:border z-10">
             <Chart total={5} completed={3} />
           </div>
         )}

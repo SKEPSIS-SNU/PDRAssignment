@@ -209,6 +209,7 @@ export async function submitTask({
     }
 
     revalidatePath(`/${trackId}`);
+    revalidatePath(`/${trackId}/${taskId}`);
     return {
       success: true,
       message: "Task submitted successfully",
@@ -221,10 +222,7 @@ export async function submitTask({
   }
 }
 
-export async function checkAccToSubmissionsAndReturnSubmissions(
-  trackId: string,
-  taskId: string
-) {
+export async function checkAndGetTrackAndTask(trackId: string, taskId: string) {
   if (
     !mongoose.Types.ObjectId.isValid(trackId) ||
     !mongoose.Types.ObjectId.isValid(taskId)
@@ -234,7 +232,6 @@ export async function checkAccToSubmissionsAndReturnSubmissions(
       message: "Invalid trackId or taskId",
     };
   }
-
   try {
     const { clerk_id, user_email } = await userInfo();
 
@@ -268,31 +265,66 @@ export async function checkAccToSubmissionsAndReturnSubmissions(
       email: user_email,
     });
 
-    if (!isAdmin) {
+    if (isAdmin) {
+      const submissions = await Assignment.find({
+        task_id: taskId,
+        status: "review",
+      }).populate({
+        path: "user_id",
+        select: "_id first_name last_name photo email", // Select only the fields you need
+      });
+
       return {
-        success: false,
-        message: "You don't have access to this page",
+        success: true,
+        isAdmin: true,
+        track: JSON.parse(JSON.stringify(track)),
+        task: JSON.parse(JSON.stringify(task)),
+        submissions: JSON.parse(JSON.stringify(submissions)),
+      };
+    } else {
+      const user = await User.findOne({
+        clerk_id,
+        email: user_email,
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          message: "User not found",
+        };
+      }
+      const membership = await Membership.findOne({
+        user_id: user._id,
+        track_id: trackId,
+      });
+
+      if (!membership) {
+        return {
+          success: false,
+          message: "You don't have access to this page",
+        };
+      }
+
+      const assignment = await Assignment.findOne({
+        user_id: user._id,
+        task_id: taskId,
+      });
+
+      if (!assignment) {
+        return {
+          success: false,
+          message: "You don't have access to this page",
+        };
+      }
+
+      return {
+        success: true,
+        isAdmin: false,
+        track: JSON.parse(JSON.stringify(track)),
+        task: JSON.parse(JSON.stringify(task)),
+        assignment: JSON.parse(JSON.stringify(assignment)),
       };
     }
-
-    // Fetch submissions with user data populated
-    const submissions = await Assignment.find({
-      task_id: taskId,
-      status: "review",
-    }).populate({
-      path: "user_id",
-      select: "_id first_name last_name photo email", // Select only the fields you need
-    });
-
-    return {
-      success: true,
-      trackName: track.track_name, // Assuming track model has this field
-      trackDescription: track.track_description, // Assuming track model has this field
-      trackBanner: track.banner,
-      taskName: task.task_name,
-      taskDescription: task.task_description,
-      submissions: JSON.parse(JSON.stringify(submissions)),
-    };
   } catch (error: any) {
     return {
       success: false,
