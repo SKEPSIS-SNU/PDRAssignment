@@ -253,6 +253,20 @@ export async function deleteTask(taskId: string, trackId: string) {
       };
     }
 
+    //remove image from uploadthing
+    if (task.image !== "") {
+      let oldImageKey = task.image.split("/").pop();
+      try {
+        const utapi = new UTApi();
+        await utapi.deleteFiles(oldImageKey);
+      } catch (error: any) {
+        return {
+          success: false,
+          message: "Failed to delete old image: " + error.message,
+        };
+      }
+    }
+
     await Assignment.deleteMany({ task_id: taskId });
     await Submission.deleteMany({ task_id: taskId });
 
