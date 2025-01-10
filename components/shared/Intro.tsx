@@ -10,12 +10,16 @@ const Intro = ({
   description,
   className,
   isAdmin,
+  total = 1,
+  completed = 0,
 }: {
   isAdmin: boolean;
   banner?: string;
   heading: string;
   description?: string;
   className?: string;
+  total?: number;
+  completed?: number;
 }) => {
   return (
     <section
@@ -38,12 +42,12 @@ const Intro = ({
       )}
       <div className="relative w-full md:w-1/2">
         {!isAdmin && (
-          <div className="w-[45vw] max-w-[200px] aspect-square bg-background rounded-tl-3xl absolute top-0 right-0 -translate-y-[90%] md:static md:rounded-xl md:translate-y-0 md:border z-10">
-            <Chart total={5} completed={3} />
+          <div className="w-[45vw] max-w-[200px] aspect-square bg-background rounded-tl-3xl absolute top-0 right-0 -translate-y-[95%] md:static md:rounded-xl md:translate-y-0 md:border z-10">
+            <Chart total={total} completed={completed} />
           </div>
         )}
 
-        <h1 className="text-4xl mt-4 font-semibold">{heading}</h1>
+        <h1 className="text-4xl font-semibold md:mt-4">{heading}</h1>
         {description && (
           <p className="text-muted-foreground text-lg mt-2 tracking-wide">
             {description}

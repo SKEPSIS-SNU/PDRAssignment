@@ -37,7 +37,7 @@ async function CheckAccessAndRenderTask({
                 src={task.image}
                 width={300}
                 height={300}
-                quality={75}
+                quality={80}
                 alt="banner"
                 className="w-full h-full object-cover relative z-10"
                 priority={true}
@@ -49,7 +49,7 @@ async function CheckAccessAndRenderTask({
           <div className="relative w-full md:w-1/2">
             <div>
               <Badge>{track.track_name}</Badge>
-              <h1 className="text-4xl font-semibold mt-1">{task.task_name}</h1>
+              <h1 className="text-4xl font-semibold mt-2">{task.task_name}</h1>
             </div>
 
             <p className="text-muted-foreground text-lg mt-2 tracking-wide">

@@ -245,6 +245,7 @@ export async function checkAndGetTrack(trackId: string) {
     }
 
     let tasks = [];
+    let completeCount = 0;
     if (isAdmin) {
       // Fetch all tasks and sort in reverse order by creation date
       tasks = await Task.find({ track_id: track._id }).sort({ createdAt: -1 });
@@ -288,6 +289,9 @@ export async function checkAndGetTrack(trackId: string) {
         const assignment = assignments.find(
           (a) => a.task_id.toString() === task._id.toString()
         );
+        if (assignment?.status === "completed") {
+          ++completeCount; // Increment completeCount for completed tasks
+        }
         return {
           ...task.toObject(),
           status: assignment?.status,
@@ -304,6 +308,7 @@ export async function checkAndGetTrack(trackId: string) {
       isAdmin: !!isAdmin,
       track: JSON.parse(JSON.stringify(track)),
       tasks: JSON.parse(JSON.stringify(tasks)),
+      completeCount: isAdmin ? 0 : completeCount,
     };
   } catch (error: any) {
     return {

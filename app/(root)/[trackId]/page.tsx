@@ -9,9 +9,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 async function CheckUserAccessAndRenderTrack({ trackId }: { trackId: string }) {
-  const { success, message, isAdmin, tasks, track } = await checkAndGetTrack(
-    trackId
-  );
+  const { success, message, isAdmin, tasks, track, completeCount } =
+    await checkAndGetTrack(trackId);
   return (
     <>
       {success ? (
@@ -24,6 +23,8 @@ async function CheckUserAccessAndRenderTrack({ trackId }: { trackId: string }) {
                   heading={track.track_name}
                   description={track.track_description}
                   isAdmin={!!isAdmin}
+                  total={tasks.length}
+                  completed={completeCount}
                 />
                 <div className="py-6 w-full flex flex-col md:flex-row justify-between gap-4 md:items-center border-b">
                   <h2 className="text-xl font-semibold">
