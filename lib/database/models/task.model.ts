@@ -1,6 +1,6 @@
 import { Schema, model, models, Document } from "mongoose";
 
-export interface Task extends Document {
+export interface ITask extends Document {
   _id: string;
   track_id: string;
   task_name: string;
@@ -8,6 +8,7 @@ export interface Task extends Document {
   image: string;
   read_more: string;
   dead_line: number;
+  expired: boolean;
   currentDate: number;
   createdAt: Date;
 }
@@ -19,6 +20,7 @@ const TaskSchema = new Schema({
   image: { type: String, default: "" },
   read_more: { type: String, default: "" },
   dead_line: { type: Number, default: 7 },
+  expired: { type: Boolean, default: false },
   currentDate: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });

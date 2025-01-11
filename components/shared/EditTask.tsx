@@ -26,7 +26,7 @@ import { File_uploader } from "./File_uploader";
 import { useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { useUploadThing } from "@/lib/uploadthing";
-import { Task } from "@/lib/database/models/task.model";
+import { ITask } from "@/lib/database/models/task.model";
 
 const formSchema = z.object({
   taskName: z.string().min(2).max(50),
@@ -36,7 +36,7 @@ const formSchema = z.object({
   additionalDays: z.string(),
 });
 
-const EditTask = ({ trackId, task }: { trackId: string; task: Task }) => {
+const EditTask = ({ trackId, task }: { trackId: string; task: ITask }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [proceessing, setProceessing] = useState(false);

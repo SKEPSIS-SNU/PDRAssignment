@@ -4,14 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { checkAndGetTrackAndTask } from "@/lib/actions/task.actions";
-import { Loader2 } from "lucide-react";
+import { CircleX, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { Suspense } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import TaskLink from "@/components/shared/TaskLink";
-import AccRejSub from "@/components/shared/AccRejSub";
 import EditTask from "@/components/shared/EditTask";
 import DeleteTask from "@/components/shared/DeleteTask";
+import AccRejSubRenderer from "@/components/shared/AccRejSubRenderer";
 
 async function CheckAccessAndRenderTask({
   trackId,
@@ -23,7 +23,7 @@ async function CheckAccessAndRenderTask({
   const { success, message, isAdmin, track, task, submissions, assignment } =
     await checkAndGetTrackAndTask(trackId, taskId);
 
-  console.log(submissions);
+  // console.log(submissions);
 
   if (!success) {
     return <ErrorDiv errorMessage={message} />;
@@ -59,6 +59,23 @@ async function CheckAccessAndRenderTask({
             <div className="p-4 border rounded-lg bg-accent/50 mt-3 text-muted-foreground">
               <p>{task.read_more}</p>
             </div>
+
+            {!isAdmin && (
+              <>
+                {assignment.note && (
+                  <div className="p-4 rounded-lg bg-primary/20 text-primary mt-4 border border-primary">
+                    <p className="font-semibold text-lg">Note</p>
+                    <p>{assignment.note}</p>
+                  </div>
+                )}
+                {assignment.error_note && (
+                  <div className="p-4 border rounded-lg mt-4 border-red-500 text-red-500 bg-destructive/30 dark:bg-destructive/50">
+                    <p className="font-semibold text-lg">Submission rejected</p>
+                    <p>{assignment.error_note}</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </section>
         {isAdmin ? (
@@ -74,7 +91,7 @@ async function CheckAccessAndRenderTask({
                   <>
                     {submissions.map((submission: any) => (
                       <div
-                        key={submission.taskId}
+                        key={submission.user_id._id}
                         className="p-6 flex flex-col gap-6 border rounded-2xl "
                       >
                         <div className="flex gap-4 items-start flex-row flex-wrap">
@@ -116,9 +133,9 @@ async function CheckAccessAndRenderTask({
                             />
                           )}
                         </div>
-                        <div className="flex flex-row flex-wrap gap-2 justify-end">
-                          <AccRejSub submissionId={submission.submission_id} />
-                        </div>
+                        <AccRejSubRenderer
+                          submissionId={submission.submission_id}
+                        />
                       </div>
                     ))}
                   </>
@@ -130,28 +147,21 @@ async function CheckAccessAndRenderTask({
           </>
         ) : (
           <section className="pb-6">
-            {assignment.status === "review" && (
-              <Button variant={"secondary"} disabled>
-                Submission under review
-              </Button>
-            )}
             {assignment.status === "in-progress" && (
               <TaskSubmitionForm trackId={track._id} taskId={task._id} />
             )}
+            {assignment.status === "review" && (
+              <div className="p-6 rounded-xl bg-accent">
+                <p className="font-semibold text-lg">Under review</p>
+                <p className="mt-1 text-muted-foreground">Your submission is under review</p>
+              </div>
+            )}
+
             {assignment.status === "completed" && (
-              <Button variant={"secondary"} disabled>
-                Submission under review
-              </Button>
-            )}
-            {task.status === "completed" && (
-              <Button className="bg-green-600 hover:bg-green-700" disabled>
-                Completed
-              </Button>
-            )}
-            {task.status === "expired" && (
-              <Button disabled variant={"destructive"}>
-                Expired
-              </Button>
+              <div className="p-6 rounded-xl bg-green-600 text-white">
+                <p className="font-semibold text-lg">Wohoo!</p>
+                <p className="mt-1">Your submission got accepted</p>
+              </div>
             )}
           </section>
         )}

@@ -26,7 +26,7 @@ async function CheckUserAccessAndRenderTrack({ trackId }: { trackId: string }) {
                   total={tasks.length}
                   completed={completeCount}
                 />
-                <div className="py-6 w-full flex flex-col md:flex-row justify-between gap-4 md:items-center border-b">
+                <div className="mt-2 py-2 w-full flex flex-col md:flex-row justify-between gap-4 md:items-center border-b">
                   <h2 className="text-xl font-semibold">
                     {isAdmin ? `All tasks` : "Your tasks"}
                   </h2>
@@ -49,7 +49,8 @@ async function CheckUserAccessAndRenderTrack({ trackId }: { trackId: string }) {
                 </div>
 
                 {tasks && (
-                  <section className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
+                  // <section className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
+                  <section className="mb-6 mt-4 columns-1 md:columns-2 lg:columns-3 space-y-4">
                     {tasks.length > 0 ? (
                       tasks.map((task: any) => (
                         <TaskCard

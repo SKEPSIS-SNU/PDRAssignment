@@ -370,6 +370,8 @@ export async function submitTask({
         github_link: gitHubLink,
         kaggle_link: kglLink,
         website_link: webLink,
+        error_note: "",
+        note: "",
       }
     );
 
@@ -506,10 +508,15 @@ export async function checkAndGetTrackAndTask(trackId: string, taskId: string) {
   }
 }
 
-export async function handleSubmissionAcceptOrReject(
-  submissionId: string,
-  type: "accept" | "reject"
-): Promise<{ success: boolean; message: string }> {
+export async function handleSubmissionAcceptOrReject({
+  submissionId,
+  type,
+  extraNote = "",
+}: {
+  submissionId: string;
+  type: "accept" | "reject";
+  extraNote?: string;
+}): Promise<{ success: boolean; message: string }> {
   if (!mongoose.Types.ObjectId.isValid(submissionId)) {
     return {
       success: false,
@@ -558,7 +565,7 @@ export async function handleSubmissionAcceptOrReject(
           { submission_id: submissionId },
           {
             status: "completed",
-            note: "Submission accepted by admin",
+            note: extraNote,
             submission_id: null,
           }
         );
@@ -581,7 +588,7 @@ export async function handleSubmissionAcceptOrReject(
           {
             status: "in-progress",
             submission_id: null,
-            error_note: "Submission rejected by admin",
+            error_note: extraNote,
             github_link: "",
             kaggle_link: "",
             website_link: "",

@@ -25,7 +25,7 @@ const Applications = ({
   );
 
   return (
-    <section className="flex flex-col gap-4 mt-4">
+    <section className="flex flex-col gap-4 mt-4 mb-6">
       <div className="self-end w-full md:w-fit relative">
         <Search className="absolute w-4 h-4 text-muted-foreground left-3 top-1/2 -translate-y-1/2" />
         <Input

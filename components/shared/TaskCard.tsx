@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
+import { Badge } from "../ui/badge";
 
 const TaskCard = ({
   track_id,
@@ -16,7 +17,7 @@ const TaskCard = ({
   return (
     <Link
       href={`/${track_id}/${task._id}`}
-      className="flex flex-col gap-2 border rounded-xl hover:bg-accent/30 transition-all card_hover p-4"
+      className="flex flex-col gap-2 border rounded-xl hover:bg-accent/30 transition-all card_hover p-4 break-inside-avoid"
     >
       <div className="w-full aspect-video overflow-hidden rounded-lg relative">
         <Skeleton className="w-full h-full absolute z-[-1] bg-accent/50" />
@@ -36,8 +37,16 @@ const TaskCard = ({
             <ImageIcon className="w-8 h-8 text-muted-foreground" />
           </div>
         )}
+        {!task.expired && (
+          <Badge
+            variant={"secondary"}
+            className="absolute bottom-2 right-2 z-30 py-2 px-3 bg-background hover:bg-background"
+          >
+            {task.dead_line - task.currentDate} Days
+          </Badge>
+        )}
       </div>
-      <div className="flex flex-col gap-6 mt-4">
+      <div className="flex flex-col gap-4 mt-3">
         <div>
           <h3 className="text-2xl font-semibold">{task.task_name}</h3>
           <p className="text-muted-foreground text-lg tracking-wide mt-1">
@@ -48,28 +57,32 @@ const TaskCard = ({
           <Button>View task</Button>
         ) : (
           <>
-            {task.note && <p>{task.note}</p>}
+            {task.note && (
+              <div className="p-4 rounded-xl border border-primary text-primary bg-primary/20">
+                {task.note}
+              </div>
+            )}
             {task.error_note && (
-              <p className="text-destructive">{task.error_note}</p>
+              <div className="text-red-500 rounded-xl border border-red-500 bg-destructive/30 dark:bg-destructive/50 p-4">
+                {task.error_note}
+              </div>
             )}
-            {task.status === "in-progress" && (
-              //   <TaskSubmitionForm trackId={track_id} taskId={task._id} />
-              <Button>View task</Button>
-            )}
+            {task.status === "in-progress" && <Button>View task</Button>}
             {task.status === "review" && (
               <Button disabled variant={"secondary"}>
                 Under Review
               </Button>
             )}
             {task.status === "completed" && (
-              <Button className="bg-green-600 hover:bg-green-700" disabled>
+              <Button
+                type="button"
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
                 Completed
               </Button>
             )}
-            {task.status === "expired" && (
-              <Button disabled variant={"destructive"}>
-                Expired
-              </Button>
+            {task.expired && task.status === "in-progress" && (
+              <Button variant={"destructive"}>Expired</Button>
             )}
           </>
         )}

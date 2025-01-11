@@ -8,8 +8,10 @@ export interface IAssignment extends Document {
   status: string;
   note: string;
   error_note: string;
-  is_edited: boolean;
   submission_id: string;
+  github_link: string;
+  kaggle_link: string;
+  website_link: string;
 }
 
 const AssignmentSchema = new Schema({
@@ -18,12 +20,11 @@ const AssignmentSchema = new Schema({
   track_id: { type: Schema.Types.ObjectId, ref: "Track", required: true },
   status: {
     type: String,
-    enum: ["in-progress", "review", "completed", "expired"],
+    enum: ["in-progress", "review", "completed"],
     default: "in-progress",
   },
   note: { type: String, default: "" },
   error_note: { type: String, default: "" },
-  is_edited: { type: Boolean, default: false },
   submission_id: {
     type: Schema.Types.ObjectId,
     ref: "Submission",
