@@ -12,6 +12,7 @@ import TaskLink from "@/components/shared/TaskLink";
 import EditTask from "@/components/shared/EditTask";
 import DeleteTask from "@/components/shared/DeleteTask";
 import AccRejSubRenderer from "@/components/shared/AccRejSubRenderer";
+import Timer from "@/components/shared/Timer";
 
 async function CheckAccessAndRenderTask({
   trackId,
@@ -33,17 +34,22 @@ async function CheckAccessAndRenderTask({
         <section className="flex flex-col gap-4 md:gap-6 md:flex-row items-start mb-6">
           {task.image && (
             <div className="w-full md:w-1/2 aspect-video overflow-hidden rounded-lg relative">
+              <Skeleton className="w-full z-[-1] h-full absolute bg-primary/50" />
               <Image
                 src={task.image}
                 width={300}
                 height={300}
                 quality={80}
                 alt="banner"
-                className="w-full h-full object-cover relative z-10"
+                className="w-full h-full object-cover"
                 priority={true}
               />
-
-              <Skeleton className="w-full h-full absolute bg-primary/50" />
+              {!task.expired && (
+                <Timer
+                  dead_line={task.dead_line}
+                  currentDate={task.currentDate}
+                />
+              )}
             </div>
           )}
           <div className="relative w-full md:w-1/2">
@@ -153,7 +159,9 @@ async function CheckAccessAndRenderTask({
             {assignment.status === "review" && (
               <div className="p-6 rounded-xl bg-accent">
                 <p className="font-semibold text-lg">Under review</p>
-                <p className="mt-1 text-muted-foreground">Your submission is under review</p>
+                <p className="mt-1 text-muted-foreground">
+                  Your submission is under review
+                </p>
               </div>
             )}
 

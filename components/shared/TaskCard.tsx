@@ -4,6 +4,7 @@ import { Skeleton } from "../ui/skeleton";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 import { Badge } from "../ui/badge";
+import Timer from "./Timer";
 
 const TaskCard = ({
   track_id,
@@ -38,12 +39,7 @@ const TaskCard = ({
           </div>
         )}
         {!task.expired && (
-          <Badge
-            variant={"secondary"}
-            className="absolute bottom-2 right-2 z-30 py-2 px-3 bg-background hover:bg-background"
-          >
-            {task.dead_line - task.currentDate} Days
-          </Badge>
+          <Timer dead_line={task.dead_line} currentDate={task.currentDate} />
         )}
       </div>
       <div className="flex flex-col gap-4 mt-3">
