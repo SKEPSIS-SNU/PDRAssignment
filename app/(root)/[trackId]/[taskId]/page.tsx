@@ -7,12 +7,13 @@ import { checkAndGetTrackAndTask } from "@/lib/actions/task.actions";
 import { CircleX, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { Suspense } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import TaskLink from "@/components/shared/TaskLink";
 import EditTask from "@/components/shared/EditTask";
 import DeleteTask from "@/components/shared/DeleteTask";
 import AccRejSubRenderer from "@/components/shared/AccRejSubRenderer";
 import Timer from "@/components/shared/Timer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TaskUserRef from "@/components/shared/TaskUserRef";
 
 async function CheckAccessAndRenderTask({
   trackId,
@@ -21,8 +22,17 @@ async function CheckAccessAndRenderTask({
   trackId: string;
   taskId: string;
 }) {
-  const { success, message, isAdmin, track, task, submissions, assignment } =
-    await checkAndGetTrackAndTask(trackId, taskId);
+  const {
+    success,
+    message,
+    isAdmin,
+    track,
+    task,
+    submissions,
+    assignment,
+    completed,
+    pending,
+  } = await checkAndGetTrackAndTask(trackId, taskId);
 
   // console.log(submissions);
 
@@ -90,66 +100,56 @@ async function CheckAccessAndRenderTask({
               <DeleteTask taskId={task._id} trackId={trackId} />
               <EditTask task={task} trackId={trackId} />
             </section>
-            <section className="pb-6">
-              <h2 className="text-lg tracking-wider mb-4">Submissions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2">
-                {submissions.length > 0 ? (
-                  <>
-                    {submissions.map((submission: any) => (
-                      <div
-                        key={submission.user_id._id}
-                        className="p-6 flex flex-col gap-6 border rounded-2xl "
-                      >
-                        <div className="flex gap-4 items-start flex-row flex-wrap">
-                          <Avatar className="w-12 h-12">
-                            <AvatarImage src={submission.user_id.photo} />
-                            <AvatarFallback>
-                              <Skeleton className="h-full w-full rounded-full bg-primary/50 animate-pulse" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold text-lg">
-                              {submission.user_id.first_name}{" "}
-                              {submission.user_id.last_name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {submission.user_id.email}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          {submission.github_link && (
-                            <TaskLink
-                              linkType="Github"
-                              link={submission.github_link}
-                            />
-                          )}
 
-                          {submission.kaggle_link && (
-                            <TaskLink
-                              linkType="Kaggel"
-                              link={submission.kaggle_link}
-                            />
-                          )}
-
-                          {submission.website_link && (
-                            <TaskLink
-                              linkType="Website"
-                              link={submission.website_link}
-                            />
-                          )}
-                        </div>
-                        <AccRejSubRenderer
-                          submissionId={submission.submission_id}
-                        />
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <p className="text-muted-foreground">No submissions yet</p>
-                )}
+            <Tabs defaultValue="submissions" className="mt-6">
+              <div className="flex justify-center">
+                <TabsList className="rounded-full">
+                  <TabsTrigger
+                    className="py-3 px-4 rounded-full"
+                    value="submissions"
+                  >
+                    Submissions
+                  </TabsTrigger>
+                  <TabsTrigger
+                    className="py-3 px-4 rounded-full"
+                    value="pending"
+                  >
+                    Pending
+                  </TabsTrigger>
+                  <TabsTrigger
+                    className="py-3 px-4 rounded-full"
+                    value="completed"
+                  >
+                    Completed
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </section>
+
+              <TabsContent value="submissions">
+                <section className="pb-6 mt-3 min-h-screen">
+                  <h2 className="text-lg tracking-wider font-semibold mb-4">
+                    Submissions
+                  </h2>
+                  <TaskUserRef users={submissions} type="submissions" />
+                </section>
+              </TabsContent>
+              <TabsContent value="pending">
+                <section className="pb-6 mt-3 min-h-screen">
+                  <h2 className="text-lg tracking-wider font-semibold mb-4">
+                    Pending
+                  </h2>
+                  <TaskUserRef users={pending} type="pending" />
+                </section>
+              </TabsContent>
+              <TabsContent value="completed">
+                <section className="pb-6 mt-3 min-h-screen">
+                  <h2 className="text-lg tracking-wider font-semibold mb-4">
+                    Completed
+                  </h2>
+                  <TaskUserRef users={completed} type="completed" />
+                </section>
+              </TabsContent>
+            </Tabs>
           </>
         ) : (
           <section className="pb-6">

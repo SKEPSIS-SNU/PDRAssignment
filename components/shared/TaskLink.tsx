@@ -19,8 +19,8 @@ const TaskLink = ({ linkType, link }: { linkType: string; link: string }) => {
   };
 
   return (
-    <div className="bg-accent dark:bg-accent/50 p-4 rounded-xl flex items-center justify-between">
-      <div>
+    <div className="bg-accent dark:bg-accent/50 p-4 rounded-xl flex items-center justify-between relative">
+      <div className="overflow-x-hidden">
         <p>{linkType}</p>
         <p className="text-muted-foreground">{link}</p>
       </div>
@@ -29,6 +29,7 @@ const TaskLink = ({ linkType, link }: { linkType: string; link: string }) => {
         size="icon"
         variant="secondary"
         disabled={copied}
+        className="absolute right-4 top-1/2 -translate-y-1/2"
       >
         {copied ? <Check /> : <Copy />}
       </Button>

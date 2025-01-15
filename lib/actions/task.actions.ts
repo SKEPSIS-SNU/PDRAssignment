@@ -449,12 +449,30 @@ export async function checkAndGetTrackAndTask(trackId: string, taskId: string) {
         select: "_id first_name last_name photo email", // Select only the fields you need
       });
 
+      const completed = await Assignment.find({
+        task_id: taskId,
+        status: "completed",
+      }).populate({
+        path: "user_id",
+        select: "_id first_name last_name photo email", // Select only the fields you need
+      });
+
+      const pending = await Assignment.find({
+        task_id: taskId,
+        status: "in-progress",
+      }).populate({
+        path: "user_id",
+        select: "_id first_name last_name photo email", // Select only the fields you need
+      });
+
       return {
         success: true,
         isAdmin: true,
         track: JSON.parse(JSON.stringify(track)),
         task: JSON.parse(JSON.stringify(task)),
         submissions: JSON.parse(JSON.stringify(submissions)),
+        completed: JSON.parse(JSON.stringify(completed)),
+        pending: JSON.parse(JSON.stringify(pending)),
       };
     } else {
       const user = await User.findOne({
