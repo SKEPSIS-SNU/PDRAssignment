@@ -8,7 +8,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "uk4dju9uv2.ufs.sh",
+        hostname: "qgyayw1sp4.ufs.sh",
         port: "",
       },
       {
