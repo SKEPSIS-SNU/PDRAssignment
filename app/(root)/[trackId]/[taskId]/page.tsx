@@ -73,7 +73,7 @@ async function CheckAccessAndRenderTask({
             </p>
 
             <div className="p-4 border rounded-lg bg-accent/50 mt-3 text-muted-foreground">
-              <p>{task.read_more}</p>
+              <pre>{task.read_more}</pre>
             </div>
 
             {!isAdmin && (
