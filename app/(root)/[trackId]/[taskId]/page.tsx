@@ -72,7 +72,7 @@ async function CheckAccessAndRenderTask({
               {task.task_description}
             </p>
 
-            <div className="p-4 border rounded-lg bg-accent/50 mt-3 text-muted-foreground">
+            <div className="p-4 border rounded-lg bg-accent/50 mt-3 text-muted-foreground overflow-x-auto">
               <pre>{task.read_more}</pre>
             </div>
 
