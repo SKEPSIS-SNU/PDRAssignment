@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { handleCreateUserAndReturnData } from "@/lib/actions/user.actions";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Instagram, Linkedin, Youtube } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { Suspense } from "react";
 
 async function HandleUser() {
@@ -90,22 +92,40 @@ export default function Home() {
                   variant={"ghost"}
                   size={"icon"}
                   className="rounded-full bg-accent/60"
+                  asChild
                 >
-                  <Instagram />
+                  <Link
+                    href="https://www.instagram.com/skepsis.official"
+                    target="_blank"
+                  >
+                    <Instagram />
+                  </Link>
                 </Button>
                 <Button
                   variant={"ghost"}
                   size={"icon"}
                   className="rounded-full bg-accent/60"
+                  asChild
                 >
-                  <Linkedin />
+                  <Link
+                    href="https://www.linkedin.com/company/skepsis-snu"
+                    target="_blank"
+                  >
+                    <Linkedin />
+                  </Link>
                 </Button>
                 <Button
                   variant={"ghost"}
                   size={"icon"}
                   className="rounded-full bg-accent/60"
+                  asChild
                 >
-                  <Youtube />
+                  <Link
+                    href="https://www.youtube.com/@SKEPSIS-SNU"
+                    target="_blank"
+                  >
+                    <Youtube />
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -152,22 +172,40 @@ export default function Home() {
                 variant={"ghost"}
                 size={"icon"}
                 className="rounded-full bg-accent/60"
+                asChild
               >
-                <Instagram />
+                <Link
+                  href="https://www.instagram.com/skepsis.official"
+                  target="_blank"
+                >
+                  <Instagram />
+                </Link>
               </Button>
               <Button
                 variant={"ghost"}
                 size={"icon"}
                 className="rounded-full bg-accent/60"
+                asChild
               >
-                <Linkedin />
+                <Link
+                  href="https://www.linkedin.com/company/skepsis-snu"
+                  target="_blank"
+                >
+                  <Linkedin />
+                </Link>
               </Button>
               <Button
                 variant={"ghost"}
                 size={"icon"}
                 className="rounded-full bg-accent/60"
+                asChild
               >
-                <Youtube />
+                <Link
+                  href="https://www.youtube.com/@SKEPSIS-SNU"
+                  target="_blank"
+                >
+                  <Youtube />
+                </Link>
               </Button>
             </div>
 
@@ -178,7 +216,16 @@ export default function Home() {
             </SignInButton>
           </div>
 
-          <div className="w-[70%] md:w-[40%] max-w-[450px] aspect-square bg-accent dark:bg-accent/50 rounded-2xl flex-shrink-0"></div>
+          <div className="w-[70%] md:w-[40%] max-w-[450px] aspect-square bg-accent dark:bg-accent/50 rounded-2xl flex-shrink-0 overflow-hidden shadow-xl shadow-border">
+            <Image
+              priority={true}
+              src="/hero.png"
+              className="w-full"
+              alt="logo"
+              width={300}
+              height={300}
+            />
+          </div>
         </main>
       </SignedOut>
     </>

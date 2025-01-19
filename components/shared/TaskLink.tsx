@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Check, Copy } from "lucide-react";
+import Link from "next/link";
 
 const TaskLink = ({ linkType, link }: { linkType: string; link: string }) => {
   const [copied, setCopied] = useState(false);
@@ -22,7 +23,11 @@ const TaskLink = ({ linkType, link }: { linkType: string; link: string }) => {
     <div className="bg-accent dark:bg-accent/50 p-4 rounded-xl flex items-center justify-between relative">
       <div className="overflow-x-hidden">
         <p>{linkType}</p>
-        <p className="text-muted-foreground">{link}</p>
+        <p className="text-muted-foreground">
+          <Link target="_blank" href={link} className="text-primary hover:underline">
+            {link}
+          </Link>
+        </p>
       </div>
       <Button
         onClick={handleCopy}

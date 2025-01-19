@@ -25,7 +25,7 @@ const SignOut = () => {
           <DialogTitle>Are you absolutely sure?</DialogTitle>
           <DialogDescription>This action will log you out</DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <SignOutButton>
             <DialogClose asChild>
               <Button variant="secondary">Sign out</Button>
